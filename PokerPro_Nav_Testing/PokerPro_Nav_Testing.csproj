@@ -100,9 +100,18 @@
     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\GraphRequest.cs" />
     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\MainMenu.cs" />
     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\Pay.cs" />
+    <Compile Include="Assets\Scripts\CardFlipper.cs" />
+    <Compile Include="Assets\Scripts\CardModel.cs" />
+    <Compile Include="Assets\Scripts\DebugChangeCard.cs" />
+    <Compile Include="Assets\Scripts\DecreaseSliderBB.cs" />
+    <Compile Include="Assets\Scripts\GlobalVars.cs" />
+    <Compile Include="Assets\Scripts\IncreaseSliderBB.cs" />
+    <Compile Include="Assets\Scripts\IncreaseSliderPotSize.cs" />
     <Compile Include="Assets\Scripts\LoadScene.cs" />
     <Compile Include="Assets\Scripts\PanelManager.cs" />
+    <Compile Include="Assets\Scripts\SubmitBet.cs" />
     <Compile Include="Assets\Scripts\Transition.cs" />
+    <Compile Include="Assets\Scripts\UpdateBet.cs" />
     <Compile Include="Assets\Scripts\fb_script.cs" />
   </ItemGroup>
   <ItemGroup>
