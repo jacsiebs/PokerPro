@@ -1,13 +1,13 @@
 sceneSetups:
-- path: Assets/login_scene.unity
+- path: Assets/Scenes/login_scene.unity
   isLoaded: 0
   isActive: 0
-- path: Assets/Main_Menu_Scene.unity
+- path: Assets/Scenes/Main_Menu_Scene.unity
   isLoaded: 1
   isActive: 1
-- path: Assets/Matchmaking_Scene.unity
+- path: Assets/Scenes/Matchmaking_Scene.unity
   isLoaded: 0
   isActive: 0
-- path: Assets/Game_Scene.unity
-  isLoaded: 1
+- path: Assets/Scenes/Game_Scene.unity
+  isLoaded: 0
   isActive: 0
