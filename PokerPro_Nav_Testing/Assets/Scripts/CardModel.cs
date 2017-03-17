@@ -9,14 +9,14 @@ public class CardModel : MonoBehaviour {
     
 
     //Locations for each player spot at the table
-    private Vector3 pos0 = new Vector3(5.25f, 2.45f, 0);
-    private Vector3 pos1 = new Vector3(6.5f, -0.95f, 0);
-    private Vector3 pos2 = new Vector3(3.5f, -2.5f, 0);
-    private Vector3 pos3 = new Vector3(-0.4f, -2.5f, 0);
-    private Vector3 pos4 = new Vector3(-4.45f, -2.5f, 0);
-    private Vector3 pos5 = new Vector3(-7.5f, -0.75f, 0);
-    private Vector3 pos6 = new Vector3(-5.95f, 2.15f, 0);
-    private Vector3 pos7 = new Vector3(-2.6f, 2.45f, 0);
+    private Vector3 pos0 = new Vector3(3.8f, 2f, 0);
+    private Vector3 pos1 = new Vector3(4.75f, -0.45f, 0);
+    private Vector3 pos2 = new Vector3(3.8f, -2.75f, 0);
+    private Vector3 pos3 = new Vector3(0.35f, -2.85f, 0);
+    private Vector3 pos4 = new Vector3(-3.15f, -2.85f, 0);
+    private Vector3 pos5 = new Vector3(-6.7f, -2.65f, 0);
+    private Vector3 pos6 = new Vector3(-7.2f, 0, 0);
+    private Vector3 pos7 = new Vector3(-6.15f, 2f, 0);
 
     //Locations for the flop/river cards
     private Vector3 posA = new Vector3(-1, 0, 0);
