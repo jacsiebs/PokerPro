@@ -10,27 +10,33 @@ public class DebugChangeCard : MonoBehaviour
     private Text[] playerIDs;
     private CardModel[] cardModel = new CardModel[25];
     private int[] myCards = new int[2];
+    private int[] commonCards = new int[5];
     private string jsonString;
     public JsonData gameState;
+    private int numGamePlayers;
     //we want to keep track of how many cards are in play so we know how many to recall
     private int cardsInPlay = 0;
 
-    void Start()
+    public static class gameGlobals
     {
-        //get the starting game state json from server
-        //placeholder vars for items in Jacob's script
-        int GlobalsDOTplayerID = 200;
-        int GlobalsDOTgameID = 10;
-        StartCoroutine(JSONGameState(GlobalsDOTgameID, GlobalsDOTplayerID));
+        public static int me;
+        public static int numGamePlayers;
+        public static bool isLoaded;
+    }
+
+    void Start()
+    {      
+        StartCoroutine(JSONGameState(GlobalVars.game_id, GlobalVars.player_id));
     }
 
     void Awake()
     {
+        gameGlobals.isLoaded = false;
         List<GameObject> cards = new List<GameObject>();
         for (int k = 25; k > -1; k--)
         {
             cards.Add(GameObject.Find("Card" + k.ToString()));
-            
+
         }
 
         for (int k = 0; k < 25; k++)
@@ -39,24 +45,58 @@ public class DebugChangeCard : MonoBehaviour
         }
     }
 
-    private IEnumerator JSONGameState(int gameID, int playerID)
+    private IEnumerator JSONGameState(string gameID, string playerID)
     {
-        string url = "http://104.131.99.193/game/" + gameID.ToString() + '/' + playerID.ToString();
+        string url = "http://104.131.99.193/game/" + gameID + '/' + playerID;
         WWW www = new WWW(url);
         yield return www;
         jsonString = www.text;
         var gameStateJson = JsonMapper.ToObject(jsonString);
         gameState = gameStateJson;
+        numGamePlayers = gameState["players"].Count;
+        gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
+        gameGlobals.me = (int)gameState["me"];
+        gameGlobals.isLoaded = true;
     }
 
     private void parseMyCards()
     {
         //convertToInt(string rank, string type)
-        int me = (int)gameState["me"];
-        myCards[0] = convertToInt(gameState["players"][me]["cards"][0]["rank"].ToString(), gameState["players"][me]["cards"][0]["type"].ToString());
-        myCards[1] = convertToInt(gameState["players"][me]["cards"][1]["rank"].ToString(), gameState["players"][me]["cards"][1]["type"].ToString());
+        myCards[0] = convertToInt(gameState["players"][gameGlobals.me]["cards"][0]["rank"].ToString(), gameState["players"][gameGlobals.me]["cards"][0]["type"].ToString());
+        myCards[1] = convertToInt(gameState["players"][gameGlobals.me]["cards"][1]["rank"].ToString(), gameState["players"][gameGlobals.me]["cards"][1]["type"].ToString());
+        //for debugging purposes print:
         print("FIRST CARD: " + myCards[0]);
         print("SECOND CARD: " + myCards[1]);
+    }
+
+    private void parseCommonCards()
+    {
+        //converts the common cards in json to ints for displaying
+        //we only get 3 common cards to start
+        for (int c = 0; c < 3; c++)
+        {
+            commonCards[c] = convertToInt(gameState["commonCards"][c]["rank"].ToString(), gameState["commonCards"][c]["type"].ToString());
+        }
+        //for debugging purposes print:
+        print("FIRST CARD: " + commonCards[0]);
+        print("SECOND CARD: " + commonCards[1]);
+        print("THIRD CARD: " + commonCards[2]);
+    }
+
+    private void parseCommonCardsPlusOne()
+    {
+        //4th common card dealt
+        commonCards[3] = convertToInt(gameState["commonCards"][3]["rank"].ToString(), gameState["commonCards"][3]["type"].ToString());
+        //for debugging purposes print:
+        print("FOURTH CARD: " + commonCards[3]);
+    }
+
+    private void parseCommonCardsPlusTwo()
+    {
+        //5th common card dealt
+        commonCards[4] = convertToInt(gameState["commonCards"][4]["rank"].ToString(), gameState["commonCards"][4]["type"].ToString());
+        //for debugging purposes print:
+        print("FIFTH CARD: " + commonCards[4]);
     }
 
     private void OnGUI()
@@ -85,6 +125,7 @@ public class DebugChangeCard : MonoBehaviour
             //CardFlipper tst = cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>();
             cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig, 
                 cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
+
             cardModel[playerSeatPlaceholder+8].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder+8].cardBackOrig, 
                 cardModel[playerSeatPlaceholder+8].cardFaces[cardIndex1], playerSeatPlaceholder+8, numGamePlayers, cardSpeed);
         }
@@ -126,6 +167,7 @@ public class DebugChangeCard : MonoBehaviour
                 //CardFlipper tst = cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>();
                 cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig,
                     cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
+
                 cardModel[playerSeatPlaceholder + 8].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + 8].cardBackOrig,
                     cardModel[playerSeatPlaceholder + 8].cardFaces[cardIndex1], playerSeatPlaceholder + 8, numGamePlayers, cardSpeed);
             }
@@ -139,8 +181,8 @@ public class DebugChangeCard : MonoBehaviour
                 float cardSpeed = 0.35f;
                 cardModel[2*numGamePlayers+i].StartRiverDeal(i, cardSpeed);
                 cardsInPlay++;
-                //Simulate deal from shuffle deck, we don't check for duplicates because that's too much work for this test
-                int cardIndex = UnityEngine.Random.Range(0, 51);
+                //use cards dealt from server
+                int cardIndex = commonCards[i];
                 //we want to show right away, so set this to 0 for no delay
                 cardModel[2*numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2*numGamePlayers + i].cardBackOrig,
                     cardModel[2*numGamePlayers + i].cardFaces[cardIndex], (2*numGamePlayers + i), 0, cardSpeed);
@@ -155,8 +197,8 @@ public class DebugChangeCard : MonoBehaviour
                 float cardSpeed = 0.35f;
                 cardModel[2 * numGamePlayers + i].StartRiverDeal(i, cardSpeed);
                 cardsInPlay++;
-                //Simulate deal from shuffle deck, we don't check for duplicates because that's too much work for this test
-                int cardIndex = UnityEngine.Random.Range(0, 51);
+                //use cards dealt from server
+                int cardIndex = commonCards[i];
                 //we want to show right away, so set this to 0 for no delay
                 cardModel[2 * numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2 * numGamePlayers + i].cardBackOrig,
                     cardModel[2 * numGamePlayers + i].cardFaces[cardIndex], (2 * numGamePlayers + i), 0, cardSpeed);
@@ -171,8 +213,8 @@ public class DebugChangeCard : MonoBehaviour
                 float cardSpeed = 0.35f;
                 cardModel[2 * numGamePlayers + i].StartRiverDeal(i, cardSpeed);
                 cardsInPlay++;
-                //Simulate deal from shuffle deck, we don't check for duplicates because that's too much work for this test
-                int cardIndex = UnityEngine.Random.Range(0, 51);
+                //use cards dealt from server
+                int cardIndex = commonCards[i];
                 //we want to show right away, so set this to 0 for no delay
                 cardModel[2 * numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2 * numGamePlayers + i].cardBackOrig,
                     cardModel[2 * numGamePlayers + i].cardFaces[cardIndex], (2 * numGamePlayers + i), 0, cardSpeed);

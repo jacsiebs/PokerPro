@@ -73,12 +73,6 @@
     <Reference Include="UnityEditor">
       <HintPath>Library\UnityAssemblies\UnityEditor.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEditor.iOS.Extensions.Xcode">
-      <HintPath>Library\UnityAssemblies\UnityEditor.iOS.Extensions.Xcode.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEditor.iOS.Extensions.Common">
-      <HintPath>Library\UnityAssemblies\UnityEditor.iOS.Extensions.Common.dll</HintPath>
-    </Reference>
     <Reference Include="Facebook.Unity">
       <HintPath>Assets\FacebookSDK\Plugins\Facebook.Unity.dll</HintPath>
     </Reference>
@@ -107,6 +101,8 @@
     <Compile Include="Assets\Scripts\CardModel.cs" />
     <Compile Include="Assets\Scripts\DebugChangeCard.cs" />
     <Compile Include="Assets\Scripts\DecreaseSliderBB.cs" />
+    <Compile Include="Assets\Scripts\Display_Bet.cs" />
+    <Compile Include="Assets\Scripts\Find_Cash_Game.cs" />
     <Compile Include="Assets\Scripts\GlobalVars.cs" />
     <Compile Include="Assets\Scripts\IncreaseSliderBB.cs" />
     <Compile Include="Assets\Scripts\IncreaseSliderPotSize.cs" />
@@ -115,6 +111,7 @@
     <Compile Include="Assets\Scripts\SubmitBet.cs" />
     <Compile Include="Assets\Scripts\Transition.cs" />
     <Compile Include="Assets\Scripts\UpdateBet.cs" />
+    <Compile Include="Assets\Scripts\countdownTimer.cs" />
     <Compile Include="Assets\Scripts\fb_script.cs" />
     <Compile Include="Assets\Scripts\getGameState.cs" />
   </ItemGroup>

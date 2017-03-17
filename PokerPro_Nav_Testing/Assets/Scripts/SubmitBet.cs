@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.Networking;
 
 //!only attached to the submit button
 public class SubmitBet : MonoBehaviour {
@@ -8,7 +9,7 @@ public class SubmitBet : MonoBehaviour {
 	Slider theSlider;
 
 	void Start () {
-		GameObject temp = GameObject.FindGameObjectWithTag ("Player");
+		GameObject temp = GameObject.Find("Bet Slider");
 		if (temp != null) {
 			theSlider = temp.GetComponent<Slider> ();
 		} else {
@@ -16,15 +17,30 @@ public class SubmitBet : MonoBehaviour {
 		}
 	}
 
-	//this function in onclick
-	public void sendTheBet(){
-		Debug.Log ("Submit Clicked");
+    // use this function in on click
+    public void sendTheBet() {
+        StartCoroutine(betHelper());
+    }
+    protected IEnumerator betHelper() {
+		Debug.Log ("Submit Bet Clicked");
 		//http.submitBet
 		Debug.Log("Slider/bet value before submit:");
 		Debug.Log(GlobalVars.bet);
-		//http.post("bet")
-		theSlider.value = 0;
-		Debug.Log("Slider/bet value after submit:");
-		Debug.Log(GlobalVars.bet);
+        // send the bet to the server
+        string url = "http://104.131.99.193/game/" + GlobalVars.game_id + "/" + GlobalVars.player_id + "/" + GlobalVars.bet;
+        UnityWebRequest www = UnityWebRequest.Get(url);
+        yield return www.Send();
+
+        // error check
+        if (www.isError)
+        {
+            Debug.Log(www.error);
+        }
+        else
+        {
+            theSlider.value = 0;
+            Debug.Log("Slider/bet value after submit:");
+            Debug.Log(GlobalVars.bet);
+        }
 	}
 }

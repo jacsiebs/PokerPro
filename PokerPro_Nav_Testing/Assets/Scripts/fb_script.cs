@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using Facebook.Unity;
 
+
 public class fb_script : MonoBehaviour {
+
 
     private void Awake()
     {
@@ -45,6 +47,15 @@ public class fb_script : MonoBehaviour {
             if(FB.IsLoggedIn)
             {
                 Debug.Log("FB is logged in");
+                // record the user id token to use as a unique player id
+                // Note: The full access token is too long to use with this mechanism
+                //       A better system will be implemented in iteration 2
+                //       For now the token is simply cut to a proper size
+                GlobalVars.player_id = "55";//AccessToken.CurrentAccessToken.TokenString.Substring(0,2);
+                if (GlobalVars.player_id == null)
+                    Debug.Log("User access token is null");
+                
+                // switch to the main menu
                 UnityEngine.SceneManagement.SceneManager.LoadScene("Main_Menu_Scene");
             } else
             {

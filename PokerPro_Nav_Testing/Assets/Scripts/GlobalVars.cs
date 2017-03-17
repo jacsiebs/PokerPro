@@ -5,7 +5,17 @@ using System.Collections;
 
 //5k/10k stakes w/ 1m buyin
 public class GlobalVars : MonoBehaviour {
-	public const int BigBlind = 10000;
+
+    private void Awake()
+    {
+        DontDestroyOnLoad(this);
+    }
+
+    // matchmaking vars
+    public static string player_id = null;
+    public static string game_id = null;
+
+    public const int BigBlind = 10000;
 	//http get bigBlindSize
 
 	//public const int SmallBlind = ;

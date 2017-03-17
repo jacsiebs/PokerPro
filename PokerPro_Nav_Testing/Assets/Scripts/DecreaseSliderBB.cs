@@ -9,7 +9,7 @@ public class DecreaseSliderBB : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		GameObject temp = GameObject.FindGameObjectWithTag ("Player");
+		GameObject temp = GameObject.Find("Bet Slider");
 		if (temp != null) {
 			theSlider = temp.GetComponent<Slider> ();
 		} else {
