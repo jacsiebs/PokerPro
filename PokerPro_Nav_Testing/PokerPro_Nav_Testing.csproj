@@ -73,12 +73,6 @@
     <Reference Include="UnityEditor">
       <HintPath>Library\UnityAssemblies\UnityEditor.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEditor.iOS.Extensions.Xcode">
-      <HintPath>Library\UnityAssemblies\UnityEditor.iOS.Extensions.Xcode.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEditor.iOS.Extensions.Common">
-      <HintPath>Library\UnityAssemblies\UnityEditor.iOS.Extensions.Common.dll</HintPath>
-    </Reference>
     <Reference Include="LitJson">
       <HintPath>Assets\LitJson.dll</HintPath>
     </Reference>
@@ -105,9 +99,13 @@
     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\Pay.cs" />
     <Compile Include="Assets\Scripts\CardFlipper.cs" />
     <Compile Include="Assets\Scripts\CardModel.cs" />
+    <Compile Include="Assets\Scripts\Change_to_main.cs" />
     <Compile Include="Assets\Scripts\DebugChangeCard.cs" />
     <Compile Include="Assets\Scripts\DecreaseSliderBB.cs" />
+    <Compile Include="Assets\Scripts\Disable_Buttons.cs" />
     <Compile Include="Assets\Scripts\Display_Bet.cs" />
+    <Compile Include="Assets\Scripts\Display_Message.cs" />
+    <Compile Include="Assets\Scripts\Display_Pot.cs" />
     <Compile Include="Assets\Scripts\Find_Cash_Game.cs" />
     <Compile Include="Assets\Scripts\GlobalVars.cs" />
     <Compile Include="Assets\Scripts\IncreaseSliderBB.cs" />

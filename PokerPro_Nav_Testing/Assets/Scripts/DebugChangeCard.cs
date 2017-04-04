@@ -33,7 +33,7 @@ public class DebugChangeCard : MonoBehaviour
         // this method has been manually tested and works well/
         // manual test included creating a game via web browser and hard coding the game_id
         // and player_id.
-        //StartCoroutine(JSONGameState(GlobalVars.game_id, GlobalVars.player_id));
+        StartCoroutine(JSONGameState(GlobalVars.game_id, GlobalVars.player_id));
     }
 
     void Awake()
@@ -56,8 +56,10 @@ public class DebugChangeCard : MonoBehaviour
     private IEnumerator JSONGameState(string gameID, string playerID)
     {
         string url = "http://104.131.99.193/game/" + gameID + '/' + playerID;
+        Debug.Log("Asking for a new game state");
         WWW www = new WWW(url);
         yield return www;
+        Debug.Log("Got a new game state.");
         jsonString = www.text;
         var gameStateJson = JsonMapper.ToObject(jsonString);
         gameState = gameStateJson;
@@ -65,6 +67,51 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
         gameGlobals.me = (int)gameState["me"];
         gameGlobals.isLoaded = true;
+        Debug.Log("Pot: " + gameState["pot"]);// delete this
+        GlobalVars.Pot = (int) gameState["pot"];
+        getUpdatedGameState(); //continue long polling
+    }
+
+    //this method is used to long poll the server for an updated game state,
+    private IEnumerator getUpdatedGameState()
+    {
+        while (true)
+        {
+            string url = "http://104.131.99.193/game/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
+            WWW www = new WWW(url);
+            yield return www;
+            jsonString = www.text;
+            var gameStateJson = JsonMapper.ToObject(jsonString);
+            gameState = gameStateJson;
+            // do we need to reset game state vales here? Might not need to
+            if (isTurn())
+            {
+                Debug.Log("It's my turn");
+                //enable bet buttons
+                Disable_Buttons.enableButtons();
+            }
+            else
+            {
+                Debug.Log("Not my turn");
+                //make sure bottons are bisabled, do nothing
+                Disable_Buttons.disableButtons();
+            }
+        }
+    }
+
+    //this method is used to check if it is the user's turn or not.
+    //this method should be called everytime we get a new game state.
+    private bool isTurn()
+    {
+        string currentPlayer = (string) gameState["currentPlayer"];
+        if (currentPlayer == gameGlobals.me.ToString())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     //this method reads in the server card assignments and converts them to an int from 0-51
@@ -129,21 +176,21 @@ public class DebugChangeCard : MonoBehaviour
                 cardsInPlay++;
             }
             // call the following method when the game state is active, need matchmaking to work first:
-            //parseMyCards();
+            parseMyCards();
             //Flip player's card for them to see
             int playerSeatPlaceholder = 1;
             //Simulate deal from shuffle deck as the we currently have networking issues
             //Simulate deal from shuffle deck from server
-            int cardIndex0 = UnityEngine.Random.Range(0, 51);
-            int cardIndex1 = cardIndex0;
+            //int cardIndex0 = UnityEngine.Random.Range(0, 51);
+            //int cardIndex1 = cardIndex0;
             //check for no duplicates within the local hand
-            while (cardIndex1 == cardIndex0)
+            /*while (cardIndex1 == cardIndex0)
             {
                 cardIndex1 = UnityEngine.Random.Range(0, 51);
-            }
+            }*/
             //the following two lines are for when the matchmaking succeeds and the game state is pulled:
-            //int cardIndex0 = myCards[0];
-            //int cardIndex1 = myCards[1];
+            int cardIndex0 = myCards[0];
+            int cardIndex1 = myCards[1];
             // if we want to see what the cards are, we can uncomment the following two lines:
             //print(cardIndex0);
             //print(cardIndex1);

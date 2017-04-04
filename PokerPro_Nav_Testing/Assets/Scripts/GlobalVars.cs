@@ -12,7 +12,7 @@ public class GlobalVars : MonoBehaviour {
     }
 
     // matchmaking vars
-    public static string player_id = null;
+    public static string player_id = "47";
     public static string game_id = null;
 
     public const int BigBlind = 10000;
@@ -21,7 +21,7 @@ public class GlobalVars : MonoBehaviour {
 	//public const int SmallBlind = ;
 	//http get smallblindsiz
 
-	public static int Pot = 5000; //placeholder for the Pot Size Bet button
+	public static int Pot = 0; //current pot on the table
 	//http get currPotSize
 
 	public static int bet = 0;//initialization
