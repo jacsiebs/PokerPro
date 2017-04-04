@@ -64,6 +64,7 @@
      <Compile Include="Assets\Scripts\Change_to_main.cs" />
      <Compile Include="Assets\Scripts\DebugChangeCard.cs" />
      <Compile Include="Assets\Scripts\DecreaseSliderBB.cs" />
+     <Compile Include="Assets\Scripts\Disable_Buttons.cs" />
      <Compile Include="Assets\Scripts\Display_Bet.cs" />
      <Compile Include="Assets\Scripts\Display_Message.cs" />
      <Compile Include="Assets\Scripts\Display_Pot.cs" />
