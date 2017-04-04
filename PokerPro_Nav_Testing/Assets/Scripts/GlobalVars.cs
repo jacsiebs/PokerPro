@@ -8,7 +8,7 @@ public class GlobalVars : MonoBehaviour {
 
     private void Awake()
     {
-        DontDestroyOnLoad(this);
+        DontDestroyOnLoad(this);// maintain globals vars
     }
 
     // matchmaking vars

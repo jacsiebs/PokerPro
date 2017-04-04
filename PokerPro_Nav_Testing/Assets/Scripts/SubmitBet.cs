@@ -22,10 +22,7 @@ public class SubmitBet : MonoBehaviour {
         StartCoroutine(betHelper());
     }
     protected IEnumerator betHelper() {
-		Debug.Log ("Submit Bet Clicked");
-		//http.submitBet
-		Debug.Log("Slider/bet value before submit:");
-		Debug.Log(GlobalVars.bet);
+		Debug.Log("Sending bet...");
         // send the bet to the server
         string url = "http://104.131.99.193/game/" + GlobalVars.game_id + "/" + GlobalVars.player_id + "/" + GlobalVars.bet;
         UnityWebRequest www = UnityWebRequest.Get(url);
@@ -39,8 +36,7 @@ public class SubmitBet : MonoBehaviour {
         else
         {
             theSlider.value = 0;
-            Debug.Log("Slider/bet value after submit:");
-            Debug.Log(GlobalVars.bet);
+            Debug.Log("Bet sent");
         }
 	}
 }

@@ -6,10 +6,11 @@ using UnityEngine.UI;
 public class Display_Bet : MonoBehaviour {
 
     public Text Bet_Display;
-    public GameObject thisObject;
+    private GameObject thisObject;
+
 	// Use this for initialization
 	void Start () {
-        thisObject = GameObject.Find("Bet_Display");
+        thisObject = GameObject.Find("Bet_Display_Script");
         Bet_Display = thisObject.GetComponent<Text>();
     }
 	
