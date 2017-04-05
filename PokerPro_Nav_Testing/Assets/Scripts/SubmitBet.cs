@@ -7,20 +7,24 @@ using UnityEngine.Networking;
 public class SubmitBet : MonoBehaviour {
 
 	Slider theSlider;
+    GameObject disable_script;
 
 	void Start () {
 		GameObject temp = GameObject.Find("Bet Slider");
 		if (temp != null) {
 			theSlider = temp.GetComponent<Slider> ();
 		} else {
-			Debug.Log ("temp is null in submit bet");
+			Debug.Log ("Cannot find the bet slider object.");
 		}
+        disable_script = GameObject.Find("Enable_Disable_Buttons");
 	}
 
     // use this function in on click
     public void sendTheBet() {
         StartCoroutine(betHelper());
     }
+
+    // sends a get request to the server containing the bet which the player has made
     protected IEnumerator betHelper() {
 		Debug.Log("Sending bet...");
         // send the bet to the server
@@ -31,12 +35,13 @@ public class SubmitBet : MonoBehaviour {
         // error check
         if (www.isError)
         {
-            Debug.Log(www.error);
+            Debug.Log("Error in sending bet: " + www.error);
         }
         else
         {
-            theSlider.value = 0;
-            Debug.Log("Bet sent");
+            Debug.Log("Bet of " + GlobalVars.bet + " sent.");
+            theSlider.value = 0;// this also changes GlobalVars.bet to 0
+            // buttons are disabled once the new gamestate is received 
         }
 	}
 }
