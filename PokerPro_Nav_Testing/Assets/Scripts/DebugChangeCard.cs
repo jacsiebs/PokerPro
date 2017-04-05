@@ -69,14 +69,26 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.isLoaded = true;
         Debug.Log("Pot: " + gameState["pot"]);// delete this
         GlobalVars.Pot = (int) gameState["pot"];
-        getUpdatedGameState(); //continue long polling
+		Debug.Log("Whose turn is it?");
+		if (isTurn())
+		{
+			Debug.Log("It's my turn");
+			//enable bet buttons
+			Disable_Buttons.enableButtons();
+			//make a bet
+		}
+		else
+		{
+			Debug.Log("Not my turn");
+			//make sure bottons are bisabled, do nothing
+			Disable_Buttons.disableButtons();
+			StartCoroutine (getUpdatedGameState ());
+		}
     }
 
     //this method is used to long poll the server for an updated game state,
     private IEnumerator getUpdatedGameState()
     {
-        while (true)
-        {
             Debug.Log("Submitting gamestate request.");
             string url = "http://104.131.99.193/game/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
             WWW www = new WWW(url);
@@ -91,21 +103,22 @@ public class DebugChangeCard : MonoBehaviour
             gameGlobals.isLoaded = true;
             Debug.Log("Pot: " + gameState["pot"]);// delete this
             GlobalVars.Pot = (int)gameState["pot"];
-            // do we need to reset game state vales here? Might not need to
-            Debug.Log("Whose turn is it?");
-            if (isTurn())
-            {
-                Debug.Log("It's my turn");
-                //enable bet buttons
-                Disable_Buttons.enableButtons();
-            }
-            else
-            {
-                Debug.Log("Not my turn");
-                //make sure bottons are bisabled, do nothing
-                Disable_Buttons.disableButtons();
-            }
-        }
+            // do we need to reset game state vales here? Might not need to   
+			Debug.Log("Whose turn is it?");
+			if (isTurn())
+			{
+				Debug.Log("It's my turn");
+				//enable bet buttons
+				Disable_Buttons.enableButtons();
+				//make a bet
+			}
+			else
+			{
+				Debug.Log("Not my turn");
+				//make sure bottons are bisabled, do nothing
+				Disable_Buttons.disableButtons();
+				StartCoroutine (getUpdatedGameState ());
+			}
     }
 
     //this method is used to check if it is the user's turn or not.
