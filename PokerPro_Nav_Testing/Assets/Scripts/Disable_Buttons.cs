@@ -10,11 +10,15 @@ public class Disable_Buttons : MonoBehaviour {
     static GameObject bet;
     
 	// Use this for initialization
-	void Start () {
+	void Awake () {
         all_in = GameObject.Find("All_In");
         fold = GameObject.Find("Fold");
         call = GameObject.Find("Call");
         bet = GameObject.Find("Place Bet");
+        if(all_in == null || fold == null || call == null || bet == null)
+        {
+            Debug.Log("Couldn't find button objects.");
+        }
     }
 	
     // greys out all buttons relating to betting - used when it is not the player's turn
