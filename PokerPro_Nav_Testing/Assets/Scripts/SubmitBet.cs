@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.Networking;
+using LitJson;
 
 //!only attached to the submit button
 public class SubmitBet : MonoBehaviour {
@@ -25,18 +26,30 @@ public class SubmitBet : MonoBehaviour {
 		Debug.Log("Sending bet...");
         // send the bet to the server
         string url = "http://104.131.99.193/game/" + GlobalVars.game_id + "/" + GlobalVars.player_id + "/" + GlobalVars.bet;
-        UnityWebRequest www = UnityWebRequest.Get(url);
-        yield return www.Send();
+        WWW www = new WWW(url);
+        yield return www;
+
+        // update the gamestate
+        Debug.Log("Got a gamestate.");
+        string jsonString = www.text;
+        var gameStateJson = JsonMapper.ToObject(jsonString);
+        DebugChangeCard.gameState = gameStateJson;
+        DebugChangeCard.gameGlobals.numGamePlayers = gameStateJson["players"].Count;
+        DebugChangeCard.gameGlobals.me = (int)gameStateJson["me"];
+        DebugChangeCard.gameGlobals.isLoaded = true;
+        Debug.Log("Pot: " + gameStateJson["pot"]);// delete this
+        GlobalVars.Pot = (int)gameStateJson["pot"];
 
         // error check
-        if (www.isError)
+        if (www.error != null)
         {
-            Debug.Log(www.error);
+            Debug.Log("WWW submit bet error: " + www.error);
         }
         else
         {
             theSlider.value = 0;
             Debug.Log("Bet sent");
+            DebugChangeCard.getUpdatedGameState();
         }
 	}
 }

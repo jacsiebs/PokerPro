@@ -12,7 +12,7 @@ public class DebugChangeCard : MonoBehaviour
     private int[] myCards = new int[2];
     private int[] commonCards = new int[5];
     private string jsonString;
-    public JsonData gameState;
+    public static JsonData gameState;
     private int numGamePlayers;
     //we want to keep track of how many cards are in play so we know how many to recall
     private int cardsInPlay = 0;
@@ -87,18 +87,17 @@ public class DebugChangeCard : MonoBehaviour
     }
 
     //this method is used to long poll the server for an updated game state,
-    private IEnumerator getUpdatedGameState()
+    public static IEnumerator getUpdatedGameState()
     {
             Debug.Log("Submitting gamestate request.");
             string url = "http://104.131.99.193/game/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
             WWW www = new WWW(url);
             yield return www;
             Debug.Log("Got a gamestate.");
-            jsonString = www.text;
+            string jsonString = www.text;
             var gameStateJson = JsonMapper.ToObject(jsonString);
             gameState = gameStateJson;
-            numGamePlayers = gameState["players"].Count;
-            gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
+            gameGlobals.numGamePlayers = gameState["players"].Count;
             gameGlobals.me = (int)gameState["me"];
             gameGlobals.isLoaded = true;
             Debug.Log("Pot: " + gameState["pot"]);// delete this
@@ -117,13 +116,13 @@ public class DebugChangeCard : MonoBehaviour
 				Debug.Log("Not my turn");
 				//make sure bottons are bisabled, do nothing
 				Disable_Buttons.disableButtons();
-				StartCoroutine (getUpdatedGameState ());
+				getUpdatedGameState();
 			}
     }
 
     //this method is used to check if it is the user's turn or not.
     //this method should be called everytime we get a new game state.
-    private bool isTurn()
+    private static bool isTurn()
     {
         string currentPlayer = (string) gameState["currentPlayer"];
         if (currentPlayer.Equals(GlobalVars.player_id))

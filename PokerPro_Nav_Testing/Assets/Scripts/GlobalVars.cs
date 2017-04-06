@@ -12,7 +12,7 @@ public class GlobalVars : MonoBehaviour {
     }
 
     // matchmaking vars
-    public static string player_id = "47";
+    public static string player_id =  Random.Range(0, 9999999).ToString();
     public static string game_id = null;
 
     public const int BigBlind = 10000;
@@ -24,7 +24,8 @@ public class GlobalVars : MonoBehaviour {
 	public static int Pot = 0; //current pot on the table
 	//http get currPotSize
 
-	public static int bet = 0;//initialization
+	public static int bet = 0;// curent bot
+    public static int curr_bet;// current bet on the table
 
 	//bug when this value is large (like 2m instead of 1m), slider will jump by more than 10k at a time. Can hopefully fix with scaling related to chipstack size.
 	//bug isn't functionally hurtful but needs fixing before release
