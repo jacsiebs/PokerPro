@@ -71,6 +71,7 @@ public class DebugChangeCard : MonoBehaviour
         Debug.Log("Pot: " + gameState["pot"]);// delete this
         GlobalVars.Pot = (int) gameState["pot"];
 		Debug.Log("Whose turn is it?");
+		dealCards ();
 		if (isTurn())
 		{
 			Debug.Log("It's my turn");
@@ -179,6 +180,41 @@ public class DebugChangeCard : MonoBehaviour
         print("FIFTH CARD: " + commonCards[4]);
     }
 
+	private void dealCards()
+	{
+		//simulate X players
+		int numGamePlayers = gameGlobals.numGamePlayers;
+		//set card travel speed
+		float cardSpeed = 0.35f;
+		for (int k = 0; k < numGamePlayers; k++) 
+		{
+			cardModel[k].StartFly(k, cardSpeed);
+			cardsInPlay++;
+		}
+		for (int i = 0; i < numGamePlayers; i++)
+		{
+			cardModel[i+numGamePlayers].StartFly(i+8, cardSpeed);
+			cardsInPlay++;
+		}
+		// call the following method when the game state is active, need matchmaking to work first:
+		parseMyCards();
+		//Flip player's card for them to see
+		int playerSeatPlaceholder = gameGlobals.me;
+		//the following two lines are for when the matchmaking succeeds and the game state is pulled:
+		int cardIndex0 = myCards[0];
+		int cardIndex1 = myCards[1];
+		// if we want to see what the cards are, we can uncomment the following two lines:
+		//print(cardIndex0);
+		//print(cardIndex1);
+
+		//flip the two player cards for them to see
+		cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig, 
+			cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
+
+		cardModel[playerSeatPlaceholder+numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder+numGamePlayers].cardBackOrig, 
+			cardModel[playerSeatPlaceholder+numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder+numGamePlayers, numGamePlayers, cardSpeed);
+	}
+
     // These are the graphical tests, which include some game state testing as well
     // The 'player' is always Player 2
     // duplicates are only checked for local hands, so some may occur within other hands
@@ -186,43 +222,38 @@ public class DebugChangeCard : MonoBehaviour
     // will provide non-duplicates when working correctly.
     private void OnGUI()
     {
-        if (GUI.Button(new Rect(10, 10, 175, 28), "Deal from deck: 8 Players"))
+        if (GUI.Button(new Rect(10, 10, 175, 28), "Deal from deck: 2 Players"))
         {
-            //simulate 8 players
-            int numGamePlayers = 8;
+            //simulate 2 players
+			int numGamePlayers = 2;
             //set card travel speed
             float cardSpeed = 0.35f;
-            for (int i = 0; i < (2*numGamePlayers); i++)
+			for (int k = 0; k < numGamePlayers; k++) 
+			{
+				cardModel[k].StartFly(k, cardSpeed);
+				cardsInPlay++;
+			}
+            for (int i = 0; i < numGamePlayers; i++)
             {
-                cardModel[i].StartFly(i, cardSpeed);
+				cardModel[i+numGamePlayers].StartFly(i+8, cardSpeed);
                 cardsInPlay++;
             }
             // call the following method when the game state is active, need matchmaking to work first:
             parseMyCards();
             //Flip player's card for them to see
             int playerSeatPlaceholder = 1;
-            //Simulate deal from shuffle deck as the we currently have networking issues
-            //Simulate deal from shuffle deck from server
-            //int cardIndex0 = UnityEngine.Random.Range(0, 51);
-            //int cardIndex1 = cardIndex0;
-            //check for no duplicates within the local hand
-            /*while (cardIndex1 == cardIndex0)
-            {
-                cardIndex1 = UnityEngine.Random.Range(0, 51);
-            }*/
             //the following two lines are for when the matchmaking succeeds and the game state is pulled:
             int cardIndex0 = myCards[0];
             int cardIndex1 = myCards[1];
             // if we want to see what the cards are, we can uncomment the following two lines:
             //print(cardIndex0);
             //print(cardIndex1);
-
             //flip the two player cards for them to see
             cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig, 
                 cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
 
-            cardModel[playerSeatPlaceholder+8].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder+8].cardBackOrig, 
-                cardModel[playerSeatPlaceholder+8].cardFaces[cardIndex1], playerSeatPlaceholder+8, numGamePlayers, cardSpeed);
+            cardModel[playerSeatPlaceholder+1].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder+1].cardBackOrig, 
+                cardModel[playerSeatPlaceholder+1].cardFaces[cardIndex1], playerSeatPlaceholder+1, numGamePlayers, cardSpeed);
         }
 
         // this test recalls all the cards currently in play

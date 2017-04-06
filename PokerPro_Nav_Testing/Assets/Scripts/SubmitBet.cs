@@ -28,7 +28,6 @@ public class SubmitBet : MonoBehaviour {
         string url = "http://104.131.99.193/game/" + GlobalVars.game_id + "/" + GlobalVars.player_id + "/" + GlobalVars.bet;
         WWW www = new WWW(url);
         yield return www;
-
         // update the gamestate
         Debug.Log("Got a gamestate.");
         string jsonString = www.text;
@@ -46,7 +45,8 @@ public class SubmitBet : MonoBehaviour {
             Debug.Log("WWW submit bet error: " + www.error);
         }
         else
-        {
+		{
+			Disable_Buttons.disableButtons();
             theSlider.value = 0;
             Debug.Log("Bet sent");
 			StartCoroutine(DebugChangeCard.getUpdatedGameState());
