@@ -9,26 +9,25 @@ public class GlobalVars : MonoBehaviour {
     private void Awake()
     {
         DontDestroyOnLoad(this);// maintain globals vars
-		player_id = Random.Range(0, 9999999).ToString();
+		player_id = Random.Range(0, 9999999).ToString();// placeholder to get a random player id
     }
 
     // matchmaking vars
 	public static string player_id;
     public static string game_id = null;
 
+    // currently unused - placeholders
     public const int BigBlind = 10000;
-	//http get bigBlindSize
-
-	//public const int SmallBlind = ;
-	//http get smallblindsiz
+	public const int SmallBlind = 5000;
 
 	public static int Pot = 0; //current pot on the table
-	//http get currPotSize
-
+    public static int oldPot = 0;// the pot size of the last hand, used to calculate the current bet
+    public static int chipsBet = 0;// number of chips put into the current pot by the player
 	public static int bet = 0;// curent bot
-    public static int curr_bet;// current bet on the table
+    public static int curr_bet = 0;// current bet on the table
 
 	//bug when this value is large (like 2m instead of 1m), slider will jump by more than 10k at a time. Can hopefully fix with scaling related to chipstack size.
 	//bug isn't functionally hurtful but needs fixing before release
-	public static int chipStack = 1000000; 
+	public static int init_chips = 1000000;// starting number of chips per player
+    public static int chips = init_chips;// the number of chips the player has
 }

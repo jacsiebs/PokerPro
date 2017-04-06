@@ -10,14 +10,25 @@ public class UpdateBet : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
 		TheBetSlider = gameObject.GetComponentInParent<Slider> ();
-		TheBetSlider.maxValue = GlobalVars.chipStack;
+		TheBetSlider.maxValue = GlobalVars.chips;
 	}
 
-	//this function in On Value Changed
-	public void sliderValueChanged(){
+    // disable the bet slider
+    public static void disableSlider()
+    {
+        TheBetSlider.interactable = false;
+    }
+
+    // enable the bet slider
+    public static void enableSlider()
+    {
+        TheBetSlider.interactable = true;
+    }
+
+    //this function in On Value Changed
+    public void sliderValueChanged(){
 		if (TheBetSlider.value == TheBetSlider.maxValue) {
-			GlobalVars.bet = GlobalVars.chipStack;
-			Debug.Log (GlobalVars.bet);
+			GlobalVars.bet = GlobalVars.chips;
 		} else {
 			//bug when chipstack is large (like 2m instead of 1m), slider will jump by more than 10k at a time. Can hopefully fix with scaling related to chipstack size.
 			//bug isn't functionally hurtful but needs fixing before release

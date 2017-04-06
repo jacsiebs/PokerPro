@@ -68,13 +68,17 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
         gameGlobals.me = (int)gameState["me"];
         gameGlobals.isLoaded = true;
-        Debug.Log("Pot: " + gameState["pot"]);// delete this
-        GlobalVars.Pot = (int) gameState["pot"];
-		Debug.Log("Whose turn is it?");
+        GlobalVars.Pot = (int)gameState["pot"];
+        // add the change in pot size to the current bet needed to call
+        GlobalVars.curr_bet += (GlobalVars.Pot - GlobalVars.oldPot);
+        GlobalVars.oldPot = GlobalVars.Pot;
+        
 		if (isTurn())
 		{
 			Debug.Log("It's my turn");
-			//enable bet buttons
+            Display_Message.print_message("Your turn to bet.");
+            //enable bet buttons and the bet slider
+            UpdateBet.enableSlider();
 			Disable_Buttons.enableButtons();
 			//make a bet
 		}
@@ -82,8 +86,9 @@ public class DebugChangeCard : MonoBehaviour
 		{
 			Debug.Log("Not my turn");
 			//make sure bottons are bisabled, do nothing
+            // Note: bet slider is always disbaled after making a move in SubmitBet
 			Disable_Buttons.disableButtons();
-			StartCoroutine (getUpdatedGameState ());
+			StartCoroutine(getUpdatedGameState());
 		}
     }
 
@@ -101,10 +106,13 @@ public class DebugChangeCard : MonoBehaviour
             gameGlobals.numGamePlayers = gameState["players"].Count;
             gameGlobals.me = (int)gameState["me"];
             gameGlobals.isLoaded = true;
-            Debug.Log("Pot: " + gameState["pot"]);// delete this
             GlobalVars.Pot = (int)gameState["pot"];
-            // do we need to reset game state vales here? Might not need to   
-			Debug.Log("Whose turn is it?");
+            // add the change in pot size to the current bet needed to call
+            GlobalVars.curr_bet += (GlobalVars.Pot - GlobalVars.oldPot);
+            GlobalVars.oldPot = GlobalVars.Pot;
+
+        // do we need to reset game state vales here? Might not need to   
+        Debug.Log("Whose turn is it?");
 			if (isTurn())
 			{
 				Debug.Log("It's my turn");

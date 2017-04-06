@@ -10,7 +10,7 @@ public class Display_Curr_Bet : MonoBehaviour
     private GameObject thisObject;
 
     // Use this for initialization
-    void Start()
+    void Awake()
     {
         thisObject = GameObject.Find("Current_Bet_Display_Script");
         Curr_Bet_Display = thisObject.GetComponent<Text>();
