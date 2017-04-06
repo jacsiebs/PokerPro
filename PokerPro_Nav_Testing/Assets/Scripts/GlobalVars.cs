@@ -9,10 +9,11 @@ public class GlobalVars : MonoBehaviour {
     private void Awake()
     {
         DontDestroyOnLoad(this);// maintain globals vars
+		player_id = Random.Range(0, 9999999).ToString();
     }
 
     // matchmaking vars
-    public static string player_id =  Random.Range(0, 9999999).ToString();
+	public static string player_id;
     public static string game_id = null;
 
     public const int BigBlind = 10000;

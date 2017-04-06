@@ -14,6 +14,7 @@ public class Find_Cash_Game : MonoBehaviour {
         // the playerID is simply the facebook user token (unique)
         Debug.Log("Asking server for a game");
         string url = "http://104.131.99.193/join/" + GlobalVars.player_id;
+		Debug.Log ("THIS IS THE URL WE ARE REQUESTING: " + url);
         WWW www = new WWW(url);
         // wait for request to complete
         yield return www;

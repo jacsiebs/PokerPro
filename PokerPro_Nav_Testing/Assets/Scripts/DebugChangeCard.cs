@@ -61,6 +61,7 @@ public class DebugChangeCard : MonoBehaviour
         yield return www;
         Debug.Log("Got a new game state.");
         jsonString = www.text;
+		Debug.Log (jsonString);
         var gameStateJson = JsonMapper.ToObject(jsonString);
         gameState = gameStateJson;
         numGamePlayers = gameState["players"].Count;

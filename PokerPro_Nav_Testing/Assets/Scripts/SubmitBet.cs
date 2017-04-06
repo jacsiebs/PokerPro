@@ -49,7 +49,7 @@ public class SubmitBet : MonoBehaviour {
         {
             theSlider.value = 0;
             Debug.Log("Bet sent");
-            DebugChangeCard.getUpdatedGameState();
+			StartCoroutine(DebugChangeCard.getUpdatedGameState());
         }
 	}
 }
