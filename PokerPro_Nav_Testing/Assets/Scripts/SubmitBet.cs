@@ -39,7 +39,7 @@ public class SubmitBet : MonoBehaviour {
         {
             turnOffSlider();
             GlobalVars.bet = GlobalVars.curr_bet;
-            betHelper(false);// run bet helper like normal
+            StartCoroutine(betHelper(false));// run bet helper like normal
         }   
     }
 
@@ -61,7 +61,7 @@ public class SubmitBet : MonoBehaviour {
     {
         turnOffSlider();
         GlobalVars.bet = GlobalVars.chips;
-        betHelper(false);// run bet helper like normal
+        StartCoroutine(betHelper(false));// run bet helper like normal
     }
 
     // submit a fold
@@ -69,7 +69,7 @@ public class SubmitBet : MonoBehaviour {
     {
         turnOffSlider();
         GlobalVars.bet = 0;// set the bet to 0 
-        betHelper(true);// run bet helper like normal
+        StartCoroutine(betHelper(true));// run bet helper like normal
     }
 
     protected IEnumerator betHelper(bool isFolded) {
@@ -84,7 +84,10 @@ public class SubmitBet : MonoBehaviour {
         // bet is valid or a fold - submit the bet and get the gamestate in return
         else
         {
-            Debug.Log("Sending bet...");
+            if (isFolded)
+                Debug.Log("Sending Fold...");
+            else 
+                Debug.Log("Sending bet...");
 
             turnOffSlider();// disbale the bet slider
 
@@ -101,8 +104,10 @@ public class SubmitBet : MonoBehaviour {
             else
             {
                 Debug.Log("Bet of " + GlobalVars.bet + " sent.");
-                if (GlobalVars.bet == 0)
+                if (GlobalVars.bet == 0 && !isFolded)
                     Display_Message.print_message("You have checked.");
+                else if(isFolded)
+                    Display_Message.print_message("You have folded.");
                 else
                     Display_Message.print_message("You have bet " + GlobalVars.bet + ".");
 

@@ -51,7 +51,7 @@ public class fb_script : MonoBehaviour {
                 // Note: The full access token is too long to use with this mechanism
                 //       A better system will be implemented in iteration 2
                 //       For now the token is simply cut to a proper size
-                GlobalVars.player_id = "55";//AccessToken.CurrentAccessToken.TokenString.Substring(0,2);
+                GlobalVars.player_id = AccessToken.CurrentAccessToken.TokenString.Substring(0,2);
                 if (GlobalVars.player_id == null)
                     Debug.Log("User access token is null");
                 

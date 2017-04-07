@@ -109,9 +109,10 @@ public class DebugChangeCard : MonoBehaviour
 			if (isTurn())
 			{
 				Debug.Log("It's my turn");
-				//enable bet buttons
+                //enable bet buttons and bet slider
+                UpdateBet.enableSlider();
 				Disable_Buttons.enableButtons();
-				//make a bet
+				// finished, getUpdatedGamestate will becalled again by submit bet
 			}
 			else
 			{
