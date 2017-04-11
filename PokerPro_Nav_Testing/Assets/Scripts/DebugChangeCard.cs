@@ -25,6 +25,14 @@ public class DebugChangeCard : MonoBehaviour
         public static int numGamePlayers;
         // this indicates if the game state has been loaded yet
         public static bool isLoaded;
+        public static int numCCards;
+        //bools for dealing cards
+        // need to add logic to reset these when a new hand begins
+        public static bool cc1;
+        public static bool cc2;
+        public static bool cc3;
+        // hand count holder
+        public static string handNum;
     }
 
     void Start()
@@ -34,6 +42,12 @@ public class DebugChangeCard : MonoBehaviour
         // manual test included creating a game via web browser and hard coding the game_id
         // and player_id.
         StartCoroutine(JSONGameState(GlobalVars.game_id, GlobalVars.player_id));
+    }
+
+    void Update()
+    {
+        StartCoroutine(checkingForCCards());
+        StartCoroutine(checkNewState());
     }
 
     void Awake()
@@ -61,17 +75,18 @@ public class DebugChangeCard : MonoBehaviour
         yield return www;
         Debug.Log("Got a new game state.");
         jsonString = www.text;
-		Debug.Log (jsonString);
+		Debug.Log (jsonString); //REMOVE latger
         var gameStateJson = JsonMapper.ToObject(jsonString);
         gameState = gameStateJson;
         numGamePlayers = gameState["players"].Count;
         gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
         gameGlobals.me = (int)gameState["me"];
+        gameGlobals.handNum = gameState["hand"].ToString();
         gameGlobals.isLoaded = true;
         Debug.Log("Pot: " + gameState["pot"]);// delete this
         GlobalVars.Pot = (int) gameState["pot"];
 		Debug.Log("Whose turn is it?");
-		dealCards ();
+		dealCards (); //deal cards to players
 		if (isTurn())
 		{
 			Debug.Log("It's my turn");
@@ -91,36 +106,58 @@ public class DebugChangeCard : MonoBehaviour
     //this method is used to long poll the server for an updated game state,
     public static IEnumerator getUpdatedGameState()
     {
-            Debug.Log("Submitting gamestate request.");
-            string url = "http://104.131.99.193/game/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
-            WWW www = new WWW(url);
-            yield return www;
-            Debug.Log("Got a gamestate.");
-            string jsonString = www.text;
-            var gameStateJson = JsonMapper.ToObject(jsonString);
-            gameState = gameStateJson;
-            gameGlobals.numGamePlayers = gameState["players"].Count;
-            gameGlobals.me = (int)gameState["me"];
-            gameGlobals.isLoaded = true;
-            Debug.Log("Pot: " + gameState["pot"]);// delete this
-            GlobalVars.Pot = (int)gameState["pot"];
-            // do we need to reset game state vales here? Might not need to   
-			Debug.Log("Whose turn is it?");
-			if (isTurn())
-			{
-				Debug.Log("It's my turn");
-                //enable bet buttons and bet slider
-                UpdateBet.enableSlider();
-				Disable_Buttons.enableButtons();
-				// finished, getUpdatedGamestate will becalled again by submit bet
-			}
-			else
-			{
-				Debug.Log("Not my turn");
-				//make sure bottons are bisabled, do nothing
-				Disable_Buttons.disableButtons();
-				getUpdatedGameState();
-			}
+        Debug.Log("Submitting gamestate request.");
+        string url = "http://104.131.99.193/game/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
+        WWW www = new WWW(url);
+        yield return www;
+        Debug.Log("Got a gamestate.");
+        string jsonString = www.text;
+        Debug.Log(jsonString); //REMOVE later
+        var gameStateJson = JsonMapper.ToObject(jsonString);
+        gameState = gameStateJson;
+        gameGlobals.numGamePlayers = gameState["players"].Count;
+        gameGlobals.me = (int)gameState["me"];
+        gameGlobals.numCCards = gameState["commonCards"].Count;
+        gameGlobals.isLoaded = true;
+        Debug.Log("Pot: " + gameState["pot"]);// delete this
+        GlobalVars.Pot = (int)gameState["pot"];
+        // do we need to reset game state vales here? Might not need to   
+        Debug.Log("Whose turn is it?");
+        if (isTurn())
+        {
+            Debug.Log("It's my turn");
+            //enable bet buttons and bet slider
+            UpdateBet.enableSlider();
+            Disable_Buttons.enableButtons();
+            // finished, getUpdatedGamestate will becalled again by submit bet
+        }
+        else
+        {
+            Debug.Log("Not my turn");
+            //make sure bottons are bisabled, do nothing
+            Disable_Buttons.disableButtons();
+            getUpdatedGameState();
+        }
+    }
+
+    // check to see if we have a new hand dealt
+    // this indicated that a new hand is happening and that we should 
+    // clear vars and restart the initial state grab.
+    // this will need to happen each time we request a new state
+    public static bool checkNewRound(string currentRound)
+    {
+        if (!gameGlobals.handNum.Equals(currentRound))
+        {
+            Debug.Log("We have a new hand!");
+            // we have a new round, return true and set handNum = currentRound
+            gameGlobals.handNum = currentRound;
+            return true;
+
+        }
+        else
+        {
+            return false;
+        }
     }
 
     //this method is used to check if it is the user's turn or not.
@@ -181,40 +218,156 @@ public class DebugChangeCard : MonoBehaviour
         print("FIFTH CARD: " + commonCards[4]);
     }
 
-	private void dealCards()
-	{
-		//simulate X players
-		int numGamePlayers = gameGlobals.numGamePlayers;
-		//set card travel speed
-		float cardSpeed = 0.35f;
-		for (int k = 0; k < numGamePlayers; k++) 
-		{
-			cardModel[k].StartFly(k, cardSpeed);
-			cardsInPlay++;
-		}
-		for (int i = 0; i < numGamePlayers; i++)
-		{
-			cardModel[i+numGamePlayers].StartFly(i+8, cardSpeed);
-			cardsInPlay++;
-		}
-		// call the following method when the game state is active, need matchmaking to work first:
-		parseMyCards();
-		//Flip player's card for them to see
-		int playerSeatPlaceholder = gameGlobals.me;
-		//the following two lines are for when the matchmaking succeeds and the game state is pulled:
-		int cardIndex0 = myCards[0];
-		int cardIndex1 = myCards[1];
-		// if we want to see what the cards are, we can uncomment the following two lines:
-		//print(cardIndex0);
-		//print(cardIndex1);
+    private IEnumerator checkingForCCards()
+    {
+        //Debug.Log ("BEFORE");
+        yield return null;
+        //Debug.Log ("Num Common Cards:" + gameGlobals.numCCards);
+        if (gameGlobals.numCCards == 3 && !gameGlobals.cc1)
+        {
+            gameGlobals.cc1 = true;
+            dealRiverF3(); //we might need to make this a coroutine
+            //checkingForCCards(); we do this once per frame, so we don't need to recursively call
+        }
+        else if (gameGlobals.numCCards == 4 && !gameGlobals.cc2)
+        {
+            gameGlobals.cc2 = true;
+            dealRiverP1();
+            //checkingForCCards();
+        }
+        else if (gameGlobals.numCCards == 5 && !gameGlobals.cc3)
+        {
+            gameGlobals.cc3 = true;
+            dealRiverP2();
+            //checkingForCCards();
+        }
+        else
+        {
+            //do nothing and wait for a state change
+        }
+    }
 
-		//flip the two player cards for them to see
-		cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig, 
-			cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
+    private IEnumerator checkNewState()
+    {
+        //Debug.Log("Hand: " + gameState["hand"].ToString());
+        try
+        {
+            if (checkNewRound(gameState["hand"].ToString()))
+            {
+                // reset some globals
+                gameGlobals.cc1 = false;
+                gameGlobals.cc2 = false;
+                gameGlobals.cc3 = false;
+                //reset current hand
+                gameGlobals.handNum = gameState["hand"].ToString();
+                // recall cards to deck
+                recallCards();
+                // parse and show winnings after recalling?
+            }
+            else
+            {
+                //do nothing and wait until new round occurs
+            }
+        }
+        catch (NullReferenceException e)
+        {
+            // has yet to be initalized in awake, frames are ahead of execution (expected)
+        }
+        //return control, we want to wait for the recall animation to complete
+        yield return null;
+    }
 
-		cardModel[playerSeatPlaceholder+numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder+numGamePlayers].cardBackOrig, 
-			cardModel[playerSeatPlaceholder+numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder+numGamePlayers, numGamePlayers, cardSpeed);
-	}
+    private void dealCards()
+    {
+        //X players
+        int numGamePlayers = gameGlobals.numGamePlayers;
+        //set card travel speed
+        float cardSpeed = 0.35f;
+        for (int k = 0; k < numGamePlayers; k++)
+        {
+            cardModel[k].StartFly(k, cardSpeed);
+            cardsInPlay++;
+        }
+        for (int i = 0; i < numGamePlayers; i++)
+        {
+            cardModel[i + numGamePlayers].StartFly(i + 8, cardSpeed);
+            cardsInPlay++;
+        }
+        //parse the cards from the server to the app index of 0-51:
+        parseMyCards();
+        //Flip player's card for them to see
+        int playerSeatPlaceholder = gameGlobals.me;
+        int cardIndex0 = myCards[0];
+        int cardIndex1 = myCards[1];
+
+        //flip the two player cards for them to see
+        cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig,
+            cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
+
+        cardModel[playerSeatPlaceholder + numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + numGamePlayers].cardBackOrig,
+            cardModel[playerSeatPlaceholder + numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder + numGamePlayers, numGamePlayers, cardSpeed);
+    }
+
+    private void dealRiverF3()
+    {
+        parseCommonCards();
+        int numGamePlayers = gameGlobals.numGamePlayers;
+        for (int i = 0; i < 3; i++)
+        {
+            float cardSpeed = 0.35f;
+            cardModel[2 * numGamePlayers + i].StartRiverDeal(i, cardSpeed);
+            cardsInPlay++;
+            //use cards dealt from server, commented becuase we can't proceed past matchmaking
+            int cardIndex = commonCards[i];
+            //we want to show right away, so set this to 0 for no delay
+            cardModel[2 * numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2 * numGamePlayers + i].cardBackOrig,
+                cardModel[2 * numGamePlayers + i].cardFaces[cardIndex], (2 * numGamePlayers + i), 0, cardSpeed);
+        }
+    }
+
+    private void dealRiverP1()
+    {
+        parseCommonCardsPlusOne();
+        int numGamePlayers = gameGlobals.numGamePlayers;
+        for (int i = 3; i < 4; i++)
+        {
+            float cardSpeed = 0.35f;
+            cardModel[2 * numGamePlayers + i].StartRiverDeal(i, cardSpeed);
+            cardsInPlay++;
+            //use cards dealt from server
+            int cardIndex = commonCards[i];
+            //we want to show right away, so set this to 0 for no delay
+            cardModel[2 * numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2 * numGamePlayers + i].cardBackOrig,
+                cardModel[2 * numGamePlayers + i].cardFaces[cardIndex], (2 * numGamePlayers + i), 0, cardSpeed);
+        }
+    }
+
+    private void dealRiverP2()
+    {
+        parseCommonCardsPlusTwo();
+        int numGamePlayers = gameGlobals.numGamePlayers;
+        for (int i = 4; i < 5; i++)
+        {
+            float cardSpeed = 0.35f;
+            cardModel[2 * numGamePlayers + i].StartRiverDeal(i, cardSpeed);
+            cardsInPlay++;
+            //use cards dealt from server
+            int cardIndex = commonCards[i];
+            //we want to show right away, so set this to 0 for no delay
+            cardModel[2 * numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2 * numGamePlayers + i].cardBackOrig,
+                cardModel[2 * numGamePlayers + i].cardFaces[cardIndex], (2 * numGamePlayers + i), 0, cardSpeed);
+        }
+    }
+
+    private void recallCards()
+    {
+        float cardSpeed = 0.35f;
+        for (int i = 0; i < cardsInPlay; i++)
+        {
+            cardModel[i].StartRecall(cardSpeed);
+        }
+        cardsInPlay = 0;
+    }
 
     // These are the graphical tests, which include some game state testing as well
     // The 'player' is always Player 2

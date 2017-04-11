@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using LitJson;
 
 //!only attached to the canvas.
 
@@ -9,6 +10,9 @@ public class FakeGlobalVars
     // matchmaking vars
     public  string player_id;
     public  string game_id = null;
+
+    // game state holder
+    public JsonData gameState = JsonMapper.ToObject("{\"tournamentId\":\"1\",\"buyin\":1000000,\"game\":1,\"hand\":1,\"spinCount\":0,\"sb\":0,\"pot\":0,\"sidepots\":[],\"commonCards\":[],\"db\":0,\"callAmount\":0,\"minimumRaiseAmount\":0,\"players\":[{\"id\":\"20\",\"name\":\"xXP0k3RsLaY3rXx\",\"status\":\"active\",\"chips\":1000000,\"chipsBet\":0},{\"id\":\"30\",\"name\":\"xXP0k3RsLaY3rXx\",\"status\":\"active\",\"chips\":1000000,\"chipsBet\":0,\"cards\":[{\"rank\":\"2\",\"type\":\"C\"},{\"rank\":\"K\",\"type\":\"S\"}]}],\"me\":1,\"currentPlayer\":\"20\"}");
 
     // currently unused - placeholders
     public const int BigBlind = 10000;

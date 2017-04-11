@@ -114,10 +114,12 @@ public class SubmitBet : MonoBehaviour {
                 // update the gamestate
                 Debug.Log("Sent bet and got a gamestate.");
                 string jsonString = www.text;
+                Debug.Log(jsonString); // REMOVE later
                 var gameStateJson = JsonMapper.ToObject(jsonString);
                 DebugChangeCard.gameState = gameStateJson;
                 DebugChangeCard.gameGlobals.numGamePlayers = gameStateJson["players"].Count;
                 DebugChangeCard.gameGlobals.me = (int)gameStateJson["me"];
+                DebugChangeCard.gameGlobals.numCCards = gameStateJson["commonCards"].Count;
                 DebugChangeCard.gameGlobals.isLoaded = true;
                 Debug.Log("Pot: " + gameStateJson["pot"]);// delete this
                 GlobalVars.Pot = (int)gameStateJson["pot"];
