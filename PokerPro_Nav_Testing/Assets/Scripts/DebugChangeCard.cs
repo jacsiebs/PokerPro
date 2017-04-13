@@ -49,7 +49,7 @@ public class DebugChangeCard : MonoBehaviour
     void Update()
     {
         StartCoroutine(checkingForCCards());
-        StartCoroutine(checkNewState());
+        //StartCoroutine(checkNewState());
     }
 
     void Awake()
@@ -123,16 +123,7 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.isLoaded = true;
         Debug.Log("Pot: " + gameState["pot"]);// delete this
         GlobalVars.Pot = (int)gameState["pot"];
-        if (!gameGlobals.handNum.Equals(gameState["hand"].ToString()))
-        {
-            Debug.Log("We have a new hand!");
-            // set recall and deal vars
-            gameGlobals.recallVar = true;
-        }
-        else
-        {
-            //do nothing
-        }
+        checkNewRound(gameState["hand"].ToString());
         // do we need to reset game state vales here? Might not need to   
         Debug.Log("Whose turn is it?");
         if (isTurn())
@@ -156,18 +147,34 @@ public class DebugChangeCard : MonoBehaviour
     // this indicated that a new hand is happening and that we should 
     // clear vars and restart the initial state grab.
     // this will need to happen each time we request a new state
-    public static bool checkNewRound(string currentRound)
+    public static void checkNewRound(string currentRound)
     {
         if (!gameGlobals.handNum.Equals(currentRound))
         {
             Debug.Log("We have a new hand!");
-            // we have a new round, return true and set handNum = currentRound
-            gameGlobals.handNum = currentRound;
-            return true;
+            // reset some globals
+            gameGlobals.cc1 = false;
+            gameGlobals.cc2 = false;
+            gameGlobals.cc3 = false;
+            gameGlobals.recallVar = true;
+            // reset current hand
+            gameGlobals.handNum = gameState["hand"].ToString();
+
+            if (isTurn())
+            {
+                UpdateBet.enableSlider();
+                Disable_Buttons.enableButtons();
+                // wait to bet
+            }
+            else
+            {
+                Debug.Log("STARTING NEW LOOP");
+                getUpdatedGameState();
+            }
         }
         else
         {
-            return false;
+            // not new hand, do nothing
         }
     }
 
@@ -233,6 +240,13 @@ public class DebugChangeCard : MonoBehaviour
     {
         //Debug.Log ("BEFORE");
         yield return null;
+        if (gameGlobals.recallVar)
+        {
+            // recall cards to deck
+            recallCards();
+            dealCards(); // re-deal cards right after we recall them
+            gameGlobals.recallVar = false; // to make sure this happens once
+        }
         //Debug.Log ("Num Common Cards:" + gameGlobals.numCCards);
         if (gameGlobals.numCCards == 3 && !gameGlobals.cc1)
         {
@@ -255,36 +269,29 @@ public class DebugChangeCard : MonoBehaviour
         }
     }
 
-    private IEnumerator checkNewState()
+    /*private static void handleNewHand()
     {
         //Debug.Log("Hand: " + gameState["hand"].ToString());
-        try
+        // StopAllCoroutines();
+        // reset some globals
+        gameGlobals.cc1 = false;
+        gameGlobals.cc2 = false;
+        gameGlobals.cc3 = false;
+        // reset current hand
+        gameGlobals.handNum = gameState["hand"].ToString();
+
+        if (isTurn())
         {
-            if (gameGlobals.recallVar)
-            {
-                // reset some globals
-                gameGlobals.cc1 = false;
-                gameGlobals.cc2 = false;
-                gameGlobals.cc3 = false;
-                // reset current hand
-                gameGlobals.handNum = gameState["hand"].ToString();
-                // recall cards to deck
-                recallCards();
-                dealCards(); // re-deal cards right after we recall them
-                gameGlobals.recallVar = false; // to make sure this happens once
-            }
-            else
-            {
-                //do nothing and wait until new round occurs
-            }
+            UpdateBet.enableSlider();
+            Disable_Buttons.enableButtons();
+            // wait to bet
         }
-        catch (NullReferenceException e)
+        else
         {
-            // has yet to be initalized in awake, frames are ahead of execution (expected)
+            Debug.Log("STARTING NEW LOOP");
+            getUpdatedGameState();
         }
-        //return control, we want to wait for the recall animation to complete
-        yield return null;
-    }
+    }*/
 
     private void dealCards()
     {
