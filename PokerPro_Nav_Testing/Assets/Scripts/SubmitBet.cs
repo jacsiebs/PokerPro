@@ -123,7 +123,16 @@ public class SubmitBet : MonoBehaviour {
                 DebugChangeCard.gameGlobals.isLoaded = true;
                 Debug.Log("Pot: " + gameStateJson["pot"]);// delete this
                 GlobalVars.Pot = (int)gameStateJson["pot"];
-
+                if (!DebugChangeCard.gameGlobals.handNum.Equals(gameStateJson["hand"].ToString()))
+                {
+                    Debug.Log("We have a new hand!");
+                    // set recall var to initiate recall and redeal for new game state
+                    DebugChangeCard.gameGlobals.recallVar = true;
+                }
+                else
+                {
+                    //do nothing
+                }
                 // reset the bet needed to call
                 GlobalVars.curr_bet = 0;
 

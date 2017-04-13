@@ -33,6 +33,8 @@ public class DebugChangeCard : MonoBehaviour
         public static bool cc3;
         // hand count holder
         public static string handNum;
+        // recall and deal vars
+        public static bool recallVar;
     }
 
     void Start()
@@ -121,6 +123,16 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.isLoaded = true;
         Debug.Log("Pot: " + gameState["pot"]);// delete this
         GlobalVars.Pot = (int)gameState["pot"];
+        if (!gameGlobals.handNum.Equals(gameState["hand"].ToString()))
+        {
+            Debug.Log("We have a new hand!");
+            // set recall and deal vars
+            gameGlobals.recallVar = true;
+        }
+        else
+        {
+            //do nothing
+        }
         // do we need to reset game state vales here? Might not need to   
         Debug.Log("Whose turn is it?");
         if (isTurn())
@@ -152,7 +164,6 @@ public class DebugChangeCard : MonoBehaviour
             // we have a new round, return true and set handNum = currentRound
             gameGlobals.handNum = currentRound;
             return true;
-
         }
         else
         {
@@ -227,19 +238,16 @@ public class DebugChangeCard : MonoBehaviour
         {
             gameGlobals.cc1 = true;
             dealRiverF3(); //we might need to make this a coroutine
-            //checkingForCCards(); we do this once per frame, so we don't need to recursively call
         }
         else if (gameGlobals.numCCards == 4 && !gameGlobals.cc2)
         {
             gameGlobals.cc2 = true;
             dealRiverP1();
-            //checkingForCCards();
         }
         else if (gameGlobals.numCCards == 5 && !gameGlobals.cc3)
         {
             gameGlobals.cc3 = true;
             dealRiverP2();
-            //checkingForCCards();
         }
         else
         {
@@ -252,17 +260,18 @@ public class DebugChangeCard : MonoBehaviour
         //Debug.Log("Hand: " + gameState["hand"].ToString());
         try
         {
-            if (checkNewRound(gameState["hand"].ToString()))
+            if (gameGlobals.recallVar)
             {
                 // reset some globals
                 gameGlobals.cc1 = false;
                 gameGlobals.cc2 = false;
                 gameGlobals.cc3 = false;
-                //reset current hand
+                // reset current hand
                 gameGlobals.handNum = gameState["hand"].ToString();
                 // recall cards to deck
                 recallCards();
-                // parse and show winnings after recalling?
+                dealCards(); // re-deal cards right after we recall them
+                gameGlobals.recallVar = false; // to make sure this happens once
             }
             else
             {
