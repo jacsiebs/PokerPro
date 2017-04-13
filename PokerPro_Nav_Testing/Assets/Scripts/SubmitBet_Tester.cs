@@ -7,7 +7,6 @@ using LitJson;
 //!only attached to the submit button
 public class SubmitBet_Tester : MonoBehaviour
 {
-    static public SubmitBet_Tester instance;// this
     // dependencies
     private static FakeSlider theSlider;// contains the slider script
     private static FakeServer server;
@@ -15,11 +14,6 @@ public class SubmitBet_Tester : MonoBehaviour
     static FakeGlobalVars globals;
     static FakeDisplayMessage messages;
     static FakeDisableButtons buttons;
-
-    public void Awake()
-    {
-        instance = this;
-    }
 
     public static void setUp(FakeServer serv, FakeSlider slid, FakeGlobalVars globalHolder, FakeDisplayMessage messageHolder, FakeDisableButtons button_disabler, bool folded)
     {
@@ -107,7 +101,7 @@ public class SubmitBet_Tester : MonoBehaviour
             turnOffSlider();// disable the bet slider
 
             // send the bet to the server
-            string url = "http://104.131.99.193/game/" + GlobalVars.game_id + "/" + GlobalVars.player_id + "/" + GlobalVars.bet;
+            string url = "http://104.131.99.193/game/" + globals.game_id + "/" + globals.player_id + "/" + globals.bet;
             server.send(url);
 //            yield return www;
 
@@ -118,18 +112,18 @@ public class SubmitBet_Tester : MonoBehaviour
             }
             else
             {
-                Debug.Log("Bet of " + GlobalVars.bet + " sent.");
+                Debug.Log("Bet of " + globals.bet + " sent.");
                 if (globals.bet == 0 && !isFolded)
                     messages.print_message("You have checked.");
                 else if (isFolded)
                     messages.print_message("You have folded.");
                 else
-                    messages.print_message("You have bet " + GlobalVars.bet + ".");
+                    messages.print_message("You have bet " + globals.bet + ".");
 
                 // update the gamestate - tested seperately
 
                 // reset the bet needed to call
-                GlobalVars.curr_bet = 0;
+                globals.curr_bet = 0;
 
                 // disable the bet UI
                 buttons.disableButtons();
