@@ -5,12 +5,25 @@ using UnityEngine;
 public class Stats : MonoBehaviour {
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
 		
 	}
 	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    // load gameobjects which hold each statistic
+    private void load_objects()
+    {
+        GameObject temp;
+        for(int i = 1; i < 13; ++i)
+        {
+  //          temp = GammeObject.Find("");
+        }
+
+    }
+
+    // display the statistics on screen
+    private void load_statistics()
+    {
+
+    }
+	
 }

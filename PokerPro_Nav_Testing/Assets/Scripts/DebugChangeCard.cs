@@ -11,9 +11,10 @@ public class DebugChangeCard : MonoBehaviour
     private CardModel[] cardModel = new CardModel[25];
     private int[] myCards = new int[2];
     private int[] commonCards = new int[5];
-    private string jsonString;
+    private static string jsonString;
     public static JsonData gameState;
     private int numGamePlayers;
+    private static WWW www = null;
     //we want to keep track of how many cards are in play so we know how many to recall
     private int cardsInPlay = 0;
 
@@ -43,7 +44,7 @@ public class DebugChangeCard : MonoBehaviour
         // this method has been manually tested and works well/
         // manual test included creating a game via web browser and hard coding the game_id
         // and player_id.
-        StartCoroutine(JSONGameState(GlobalVars.game_id, GlobalVars.player_id));
+        JSONGameState(GlobalVars.game_id, GlobalVars.player_id);
     }
 
     void Update()
@@ -69,15 +70,15 @@ public class DebugChangeCard : MonoBehaviour
 
     //this method gets the JSON from the server and stores it as a object.
     // it also sets a few useful global variables.
-    private IEnumerator JSONGameState(string gameID, string playerID)
+    private void JSONGameState(string gameID, string playerID)
     {
-        string url = "http://104.131.99.193/game/" + gameID + '/' + playerID;
-        Debug.Log("Asking for a new game state");
-        WWW www = new WWW(url);
-        yield return www;
-        Debug.Log("Got a new game state.");
-        jsonString = www.text;
-		Debug.Log (jsonString); //REMOVE latger
+        StartCoroutine(askForGameState());
+        // wait for the server response
+        WaitForSeconds w;
+        while (!www.isDone)
+            w = new WaitForSeconds(0.1f);
+
+        Debug.Log (jsonString); //REMOVE latger
         var gameStateJson = JsonMapper.ToObject(jsonString);
         gameState = gameStateJson;
         numGamePlayers = gameState["players"].Count;
@@ -101,19 +102,33 @@ public class DebugChangeCard : MonoBehaviour
 			Debug.Log("Not my turn");
 			//make sure bottons are bisabled, do nothing
 			Disable_Buttons.disableButtons();
-			StartCoroutine (getUpdatedGameState ());
+			getUpdatedGameState();
 		}
     }
 
+    public static IEnumerator askForGameState()
+    {
+        string url = "http://104.131.99.193/game/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
+        www = new WWW(url);
+        //yield return www;
+        WaitForSeconds w;
+        while (!www.isDone)
+            w = new WaitForSeconds(0.1f);
+        Debug.Log("Got a gamestate.");
+        jsonString = www.text;
+        yield return www;
+    }
+
     //this method is used to long poll the server for an updated game state,
-    public static IEnumerator getUpdatedGameState()
+    public void getUpdatedGameState()
     {
         Debug.Log("Submitting gamestate request.");
-        string url = "http://104.131.99.193/game/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
-        WWW www = new WWW(url);
-        yield return www;
-        Debug.Log("Got a gamestate.");
-        string jsonString = www.text;
+        StartCoroutine(askForGameState());
+        // wait for the server response
+        WaitForSeconds w;
+        while (!www.isDone)
+            w = new WaitForSeconds(0.1f);
+
         Debug.Log(jsonString); //REMOVE later
         var gameStateJson = JsonMapper.ToObject(jsonString);
         gameState = gameStateJson;
@@ -147,7 +162,7 @@ public class DebugChangeCard : MonoBehaviour
     // this indicated that a new hand is happening and that we should 
     // clear vars and restart the initial state grab.
     // this will need to happen each time we request a new state
-    public static void checkNewRound(string currentRound)
+    public void checkNewRound(string currentRound)
     {
         if (!gameGlobals.handNum.Equals(currentRound))
         {

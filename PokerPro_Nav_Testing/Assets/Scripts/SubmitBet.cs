@@ -8,8 +8,10 @@ using LitJson;
 public class SubmitBet : MonoBehaviour {
 
 	Slider theSlider;
+    DebugChangeCard script = null;
 
-	void Awake () {
+
+    void Awake () {
 		GameObject temp = GameObject.Find("Bet Slider");
 		if (temp != null) {
 			theSlider = temp.GetComponent<Slider> ();
@@ -139,7 +141,12 @@ public class SubmitBet : MonoBehaviour {
                 // disable the bet UI
                 Disable_Buttons.disableButtons();
                 theSlider.value = 0;// also makes GlobalVars.bet=0
-                StartCoroutine(DebugChangeCard.getUpdatedGameState());
+                if(script == null)
+                {
+                    GameObject debug_change_cards = GameObject.Find("_Debug");
+                    DebugChangeCard script = debug_change_cards.GetComponent<DebugChangeCard>();
+                }           
+                script.getUpdatedGameState();
             }
         }
 	}
