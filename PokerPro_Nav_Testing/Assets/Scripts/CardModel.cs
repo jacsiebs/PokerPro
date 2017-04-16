@@ -55,10 +55,10 @@ public class CardModel : MonoBehaviour {
         cardBackOrig = spriteRenderer.sprite;
     }
 
-    public void StartFly(int dealNum, float speed)
+    public void StartFly(int dealNum, float speed, int numGamePlayers)
     {
         //If on second round of cads, place to the side of already dealt card
-        if (dealNum < 8)
+        if (dealNum < numGamePlayers)
         {
             Vector3 dest = getPos(dealNum);
             dest.x = dest.x + 1f;
@@ -66,7 +66,7 @@ public class CardModel : MonoBehaviour {
         }
         else
         {
-            StartCoroutine(LerpRoutine(getPos(dealNum - 8), speed, (dealNum + 1) * speed));
+            StartCoroutine(LerpRoutine(getPos(dealNum - numGamePlayers), speed, (dealNum + 1) * speed));
         }
     }
 

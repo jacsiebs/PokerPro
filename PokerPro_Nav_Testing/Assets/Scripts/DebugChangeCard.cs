@@ -17,6 +17,9 @@ public class DebugChangeCard : MonoBehaviour
     private static WWW www = null;
     //we want to keep track of how many cards are in play so we know how many to recall
     private int cardsInPlay = 0;
+    // slider obj
+    private Slider theSlider;
+
 
     public static class gameGlobals
     {
@@ -36,6 +39,8 @@ public class DebugChangeCard : MonoBehaviour
         public static string handNum;
         // recall and deal vars
         public static bool recallVar;
+        // www finished 
+        public static bool wwwLoaded;
     }
 
     void Start()
@@ -51,10 +56,12 @@ public class DebugChangeCard : MonoBehaviour
     {
         StartCoroutine(checkingForCCards());
         //StartCoroutine(checkNewState());
+        parseGameState();
     }
 
     void Awake()
     {
+        gameGlobals.wwwLoaded = false;
         gameGlobals.isLoaded = false;
         List<GameObject> cards = new List<GameObject>();
         //find all the card objects in the scene and add them to a list to reference later
@@ -66,19 +73,27 @@ public class DebugChangeCard : MonoBehaviour
         {
             cardModel[k] = cards[k].GetComponent<CardModel>();
         }
+        // added from SubmitBet
+        GameObject temp = GameObject.Find("Bet Slider");
+        if (temp != null)
+        {
+            theSlider = temp.GetComponent<Slider>();
+        }
+        else
+        {
+            Debug.Log("Can't locate the slider.");
+        }
+        // end add
     }
 
     //this method gets the JSON from the server and stores it as a object.
     // it also sets a few useful global variables.
     private void JSONGameState(string gameID, string playerID)
     {
-        StartCoroutine(askForGameState());
+        //askForGSMethod();
+        StartCoroutine(askForInitialGameState());
         // wait for the server response
-        WaitForSeconds w;
-        while (!www.isDone)
-            w = new WaitForSeconds(0.1f);
-
-        Debug.Log (jsonString); //REMOVE latger
+        /*Debug.Log(jsonString); //REMOVE latger
         var gameStateJson = JsonMapper.ToObject(jsonString);
         gameState = gameStateJson;
         numGamePlayers = gameState["players"].Count;
@@ -87,49 +102,110 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.handNum = gameState["hand"].ToString();
         gameGlobals.isLoaded = true;
         Debug.Log("Pot: " + gameState["pot"]);// delete this
-        GlobalVars.Pot = (int) gameState["pot"];
-		Debug.Log("Whose turn is it?");
-		dealCards (); //deal cards to players
-		if (isTurn())
-		{
-			Debug.Log("It's my turn");
-			//enable bet buttons
-			Disable_Buttons.enableButtons();
-			//make a bet
-		}
-		else
-		{
-			Debug.Log("Not my turn");
-			//make sure bottons are bisabled, do nothing
-			Disable_Buttons.disableButtons();
-			getUpdatedGameState();
-		}
+        GlobalVars.Pot = (int)gameState["pot"];
+        Debug.Log("Whose turn is it?");
+        dealCards(); //deal cards to players 
+        if (isTurn())
+        {
+            Debug.Log("It's my turn");
+            //enable bet buttons
+            Disable_Buttons.enableButtons();
+            //make a bet
+        }
+        else
+        {
+            Debug.Log("Not my turn");
+            //make sure bottons are bisabled, do nothing
+            Disable_Buttons.disableButtons();
+            getUpdatedGameState();
+        }*/
     }
 
-    public static IEnumerator askForGameState()
+    public void parseGameState()
+    {
+        if (gameGlobals.wwwLoaded)
+        {
+            Debug.Log(jsonString); //REMOVE latger
+            var gameStateJson = JsonMapper.ToObject(jsonString);
+            gameState = gameStateJson;
+            numGamePlayers = gameState["players"].Count;
+            gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
+            gameGlobals.me = (int)gameState["me"];
+            gameGlobals.handNum = gameState["hand"].ToString();
+            gameGlobals.isLoaded = true;
+            Debug.Log("Pot: " + gameState["pot"]);// delete this
+            GlobalVars.Pot = (int)gameState["pot"];
+            Debug.Log("Whose turn is it?");
+            dealCards(); //deal cards to players
+            if (isTurn())
+            {
+                Debug.Log("It's my turn");
+                //enable bet buttons
+                Disable_Buttons.enableButtons();
+                //make a bet
+                gameGlobals.wwwLoaded = false;
+            }
+            else
+            {
+                Debug.Log("Not my turn");
+                //make sure bottons are bisabled, do nothing
+                Disable_Buttons.disableButtons();
+                gameGlobals.wwwLoaded = false;
+                StartCoroutine(getUpdatedGameState());
+            }
+        }
+        else
+        {
+            // do nothing
+        }
+    }
+
+    /*public void askForGSMethod()
+    {
+        StartCoroutine(askForGameState());
+        
+    }*/
+
+    public IEnumerator askForInitialGameState()
+    {
+        //yield return new WaitForSeconds(0.15f);
+        string url = "http://104.131.99.193/fastgame/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
+        www = new WWW(url);
+        yield return www;
+        Debug.Log("Got a gamestate.");
+        jsonString = www.text;
+        try
+        {
+            var testJson = JsonMapper.ToObject(jsonString);
+            string playerCardsYet = (string) testJson["currentPlayer"];
+        }
+        catch (KeyNotFoundException)
+        {
+            StartCoroutine(askForInitialGameState());
+        }
+        Debug.Log(jsonString);
+        gameGlobals.wwwLoaded = true;
+    }
+
+    public IEnumerator askForGameState()
     {
         string url = "http://104.131.99.193/game/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
         www = new WWW(url);
-        //yield return www;
-        WaitForSeconds w;
-        while (!www.isDone)
-            w = new WaitForSeconds(0.1f);
+        yield return www;
         Debug.Log("Got a gamestate.");
         jsonString = www.text;
-        yield return www;
+        Debug.Log(jsonString);
+        gameGlobals.wwwLoaded = true;
     }
 
     //this method is used to long poll the server for an updated game state,
-    public void getUpdatedGameState()
+    public IEnumerator getUpdatedGameState()
     {
+        yield return null;
         Debug.Log("Submitting gamestate request.");
-        StartCoroutine(askForGameState());
+        StartCoroutine(askForGameState());//askForGSMethod();
         // wait for the server response
-        WaitForSeconds w;
-        while (!www.isDone)
-            w = new WaitForSeconds(0.1f);
-
-        Debug.Log(jsonString); //REMOVE later
+        /*Debug.Log(jsonString); //REMOVE later
         var gameStateJson = JsonMapper.ToObject(jsonString);
         gameState = gameStateJson;
         gameGlobals.numGamePlayers = gameState["players"].Count;
@@ -155,7 +231,7 @@ public class DebugChangeCard : MonoBehaviour
             //make sure bottons are bisabled, do nothing
             Disable_Buttons.disableButtons();
             getUpdatedGameState();
-        }
+        }*/
     }
 
     // check to see if we have a new hand dealt
@@ -174,23 +250,12 @@ public class DebugChangeCard : MonoBehaviour
             gameGlobals.recallVar = true;
             // reset current hand
             gameGlobals.handNum = gameState["hand"].ToString();
-
-            if (isTurn())
-            {
-                UpdateBet.enableSlider();
-                Disable_Buttons.enableButtons();
-                // wait to bet
-            }
-            else
-            {
-                Debug.Log("STARTING NEW LOOP");
-                getUpdatedGameState();
-            }
         }
         else
         {
             // not new hand, do nothing
         }
+        Debug.Log("Returning from checkNewRound.");
     }
 
     //this method is used to check if it is the user's turn or not.
@@ -284,30 +349,6 @@ public class DebugChangeCard : MonoBehaviour
         }
     }
 
-    /*private static void handleNewHand()
-    {
-        //Debug.Log("Hand: " + gameState["hand"].ToString());
-        // StopAllCoroutines();
-        // reset some globals
-        gameGlobals.cc1 = false;
-        gameGlobals.cc2 = false;
-        gameGlobals.cc3 = false;
-        // reset current hand
-        gameGlobals.handNum = gameState["hand"].ToString();
-
-        if (isTurn())
-        {
-            UpdateBet.enableSlider();
-            Disable_Buttons.enableButtons();
-            // wait to bet
-        }
-        else
-        {
-            Debug.Log("STARTING NEW LOOP");
-            getUpdatedGameState();
-        }
-    }*/
-
     private void dealCards()
     {
         //X players
@@ -316,12 +357,13 @@ public class DebugChangeCard : MonoBehaviour
         float cardSpeed = 0.35f;
         for (int k = 0; k < numGamePlayers; k++)
         {
-            cardModel[k].StartFly(k, cardSpeed);
+            cardModel[k].StartFly(k, cardSpeed, numGamePlayers);
             cardsInPlay++;
         }
+        // here we need to use 8 as an offset timer for 2nd pass of cards
         for (int i = 0; i < numGamePlayers; i++)
         {
-            cardModel[i + numGamePlayers].StartFly(i + 8, cardSpeed);
+            cardModel[i + numGamePlayers].StartFly(i + numGamePlayers, cardSpeed, numGamePlayers);
             cardsInPlay++;
         }
         //parse the cards from the server to the app index of 0-51:
@@ -399,6 +441,137 @@ public class DebugChangeCard : MonoBehaviour
         }
         cardsInPlay = 0;
     }
+    //*******
+    // This starts the merging of SubmitBet, all methods below are from the old file
+    // use this function in on click
+    //*******
+    public void sendTheBet()
+    {
+        // sends the current bet on the slider
+        StartCoroutine(betHelper(false));
+    }
+
+    // sumbit a bet equal to the bet currently before you
+    public void call()
+    {
+        // check if the player has enough chips
+        // TODO replace with an all in
+        if (GlobalVars.curr_bet > GlobalVars.chips)
+        {
+            Debug.Log("Not enough chips to call.");
+            Display_Message.print_message("Not enough chips to call");
+        }
+        // valid call
+        else
+        {
+            turnOffSlider();
+            GlobalVars.bet = GlobalVars.curr_bet;
+            StartCoroutine(betHelper(false));// run bet helper like normal
+        }
+    }
+
+    // turns off the slider so that the bet can no longer be modified
+    private void turnOffSlider()
+    {
+        UpdateBet.disableSlider();
+    }
+
+    // turns on the slider so that the bet can be modified
+    private void turnOnSlider()
+    {
+        UpdateBet.enableSlider();
+    }
+
+    // submit a bet of all your chips
+    // TODO handle the case where all in does not cover the call, currently it does not allow this
+    public void allIn()
+    {
+        turnOffSlider();
+        GlobalVars.bet = GlobalVars.chips;
+        StartCoroutine(betHelper(false));// run bet helper like normal
+    }
+
+    // submit a fold
+    public void fold()
+    {
+        turnOffSlider();
+        GlobalVars.bet = 0;// set the bet to 0 
+        StartCoroutine(betHelper(true));// run bet helper like normal
+    }
+
+    private IEnumerator betHelper(bool isFolded)
+    {
+        // check that the bet is valid - must be at least as large as the bet needed to call
+        if (GlobalVars.bet < GlobalVars.curr_bet && !isFolded)
+        {
+            Debug.Log("Invalid bet. Your bet: " + GlobalVars.bet + "\nBet Needed: " + GlobalVars.curr_bet);
+            Display_Message.print_message("Submit a bet over " + GlobalVars.curr_bet + " or fold.");
+            turnOnSlider();// renable if disabled by all in
+        }
+
+        // bet is valid or a fold - submit the bet and get the gamestate in return
+        else
+        {
+            if (isFolded)
+                Debug.Log("Sending Fold...");
+            else
+                Debug.Log("Sending bet...");
+
+            turnOffSlider();// disbale the bet slider
+
+            // send the bet to the server
+            string url = "http://104.131.99.193/game/" + GlobalVars.game_id + "/" + GlobalVars.player_id + "/" + GlobalVars.bet;
+            WWW www = new WWW(url);
+            yield return www;
+
+            // error check
+            if (www.error != null)
+            {
+                Debug.Log("WWW submit bet error: " + www.error);
+            }
+            else
+            {
+                Debug.Log("Bet of " + GlobalVars.bet + " sent.");
+                if (GlobalVars.bet == 0 && !isFolded)
+                    Display_Message.print_message("You have checked.");
+                else if (isFolded)
+                    Display_Message.print_message("You have folded.");
+                else
+                    Display_Message.print_message("You have bet " + GlobalVars.bet + ".");
+
+                // update the gamestate
+                Debug.Log("Sent bet and got a gamestate.");
+                string jsonString = www.text;
+                Debug.Log(jsonString); // REMOVE later
+                var gameStateJson = JsonMapper.ToObject(jsonString);
+                gameState = gameStateJson;
+                gameGlobals.numGamePlayers = gameStateJson["players"].Count;
+                gameGlobals.me = (int)gameStateJson["me"];
+                gameGlobals.numCCards = gameStateJson["commonCards"].Count;
+                gameGlobals.isLoaded = true;
+                Debug.Log("Pot: " + gameStateJson["pot"]);// delete this
+                GlobalVars.Pot = (int)gameStateJson["pot"];
+                if (!gameGlobals.handNum.Equals(gameStateJson["hand"].ToString()))
+                {
+                    Debug.Log("We have a new hand!");
+                    // set recall var to initiate recall and redeal for new game state
+                    gameGlobals.recallVar = true;
+                }
+                else
+                {
+                    //do nothing
+                }
+                // reset the bet needed to call
+                GlobalVars.curr_bet = 0;
+
+                // disable the bet UI
+                Disable_Buttons.disableButtons();
+                theSlider.value = 0;// also makes GlobalVars.bet=0
+                // we just bet, so lets ask for a new game state right away
+                getUpdatedGameState();
+            }
+        }
+    }
 
     // These are the graphical tests, which include some game state testing as well
     // The 'player' is always Player 2
@@ -415,30 +588,38 @@ public class DebugChangeCard : MonoBehaviour
             float cardSpeed = 0.35f;
 			for (int k = 0; k < numGamePlayers; k++) 
 			{
-				cardModel[k].StartFly(k, cardSpeed);
+				cardModel[k].StartFly(k, cardSpeed, numGamePlayers);
 				cardsInPlay++;
 			}
             for (int i = 0; i < numGamePlayers; i++)
             {
-				cardModel[i+numGamePlayers].StartFly(i+8, cardSpeed);
+				cardModel[i+numGamePlayers].StartFly(i + numGamePlayers, cardSpeed, numGamePlayers);
                 cardsInPlay++;
             }
             // call the following method when the game state is active, need matchmaking to work first:
-            parseMyCards();
+            //parseMyCards();
             //Flip player's card for them to see
             int playerSeatPlaceholder = 1;
             //the following two lines are for when the matchmaking succeeds and the game state is pulled:
-            int cardIndex0 = myCards[0];
-            int cardIndex1 = myCards[1];
-            // if we want to see what the cards are, we can uncomment the following two lines:
-            //print(cardIndex0);
-            //print(cardIndex1);
-            //flip the two player cards for them to see
-            cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig, 
+            int cardIndex0 = 2;//myCards[0];
+            int cardIndex1 = 15;//myCards[1];
+                                // if we want to see what the cards are, we can uncomment the following two lines:
+                                //print(cardIndex0);
+                                //print(cardIndex1);
+                                //flip the two player cards for them to see
+
+            cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig,
                 cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
 
-            cardModel[playerSeatPlaceholder+1].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder+1].cardBackOrig, 
-                cardModel[playerSeatPlaceholder+1].cardFaces[cardIndex1], playerSeatPlaceholder+1, numGamePlayers, cardSpeed);
+            cardModel[playerSeatPlaceholder + numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + numGamePlayers].cardBackOrig,
+                cardModel[playerSeatPlaceholder + numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder + numGamePlayers, numGamePlayers, cardSpeed);
+
+            /* cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig, 
+                 cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
+
+             cardModel[playerSeatPlaceholder+1].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder+1].cardBackOrig, 
+                 cardModel[playerSeatPlaceholder+1].cardFaces[cardIndex1], playerSeatPlaceholder+1, numGamePlayers, cardSpeed);
+             */
         }
 
         // this test recalls all the cards currently in play

@@ -9,7 +9,7 @@ public class GlobalVars : MonoBehaviour {
     private void Awake()
     {
         DontDestroyOnLoad(this);// maintain globals vars
-        player_id = 644345.ToString();// Random.Range(0, 9999999).ToString();// TODO placeholder to get a random player id
+        player_id ="234524";// Random.Range(0, 9999999).ToString();// TODO placeholder to get a random player id
     }
 
     // player avatar
