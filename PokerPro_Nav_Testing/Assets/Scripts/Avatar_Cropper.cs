@@ -23,6 +23,7 @@ public class Avatar_Cropper
     // param square specifies if the image should be cropped to a circle
     public static Sprite get_avatar(string name, bool square)
     {
+        Debug.Log(name);
         Texture2D avatar = Resources.Load<Texture2D>(name);
         // check if the avatar is a square
         if (avatar.height != avatar.width)

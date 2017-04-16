@@ -9,8 +9,6 @@ public class Avatar_Selector : MonoBehaviour {
     void Awake () {
         // get the pre-made sprites and load them into the images
 
-        // load in the player's current avatar from global vars
-        GlobalVars.avatar = Avatar_Cropper.get_avatar(GlobalVars.avatar_num);
         load_avatars();
         update_avatar_pic();
     }
@@ -28,9 +26,9 @@ public class Avatar_Selector : MonoBehaviour {
     }
 
     // use this for on-click
-    public static void change_avatar(int avatar_num)
+    public void change_avatar(int avatar_num)
     {
-        change_avatar_helper(avatar_num);
+        StartCoroutine(change_avatar_helper(avatar_num));
     }
 
     // updates the server with this player's new avatar selection 
@@ -38,9 +36,11 @@ public class Avatar_Selector : MonoBehaviour {
     private static IEnumerator change_avatar_helper(int avatar_num)
     {
         // send the update request
-        string url = "http://104.131.99.193/set_avatar/" + avatar_num;// placeholder url
+        string url = "http://104.131.99.193/changeStat/avatarId/" + GlobalVars.player_id + "/" + avatar_num;// placeholder url
         WWW www = new WWW(url);
         yield return www;
+        GlobalVars.avatar_num = avatar_num;
+
         GlobalVars.avatar = Avatar_Cropper.get_avatar(avatar_num);
         // change the avatar on screen
         update_avatar_pic();
