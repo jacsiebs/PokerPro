@@ -34,8 +34,4 @@ public class Find_Cash_Game : MonoBehaviour {
             UnityEngine.SceneManagement.SceneManager.LoadScene("Game_Scene");
         }
     }
-	
-	void Update () {
-		
-	}
 }

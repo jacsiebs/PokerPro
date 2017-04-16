@@ -9,10 +9,11 @@ public class GlobalVars : MonoBehaviour {
     private void Awake()
     {
         DontDestroyOnLoad(this);// maintain globals vars
-		player_id = Random.Range(0, 9999999).ToString();// TODO placeholder to get a random player id
+        player_id = 644345.ToString();// Random.Range(0, 9999999).ToString();// TODO placeholder to get a random player id
     }
 
     // player avatar
+    public static string username;
     public static Sprite square_avatar = null;// a facebook profile picture or premade avatar - no cropping
     public static Sprite avatar = null;// a facebook profile picture or premade avatar, cropped to a circle
     public static int avatar_num = 1;// TODO remove placeholder - loaded in from server

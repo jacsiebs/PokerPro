@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using LitJson;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,33 +26,33 @@ public class image_grabber : MonoBehaviour {
 	}
 
     // set GlobalVars.avatar_num, GlobalVars.sprite, GlobalVars.rank, and GlobalVars.rank_sprite
-    private void set_player_info()
+    private IEnumerator set_player_info()
     {
-        // get the avatar_num from the server
-//        get_avatar_num();
-        // wait until the server response with the avatar_num
-//        WaitForSeconds w;
-//        while (!www.isDone)
-//            w = new WaitForSeconds(0.1f);
+        Debug.Log("Asking server for player info in main menu...");
+        string url = "http://104.131.99.193/playerStats/" + GlobalVars.player_id;
+        WWW www = new WWW(url);
+        // wait for a response
+        WaitForSeconds w;
+        while (!www.isDone)
+            w = new WaitForSeconds(0.1f);
+        Debug.Log("Got a player object.");
+        string jsonString = www.text;
+        var playerJson = JsonMapper.ToObject(jsonString);// parse
+        GlobalVars.ELO = (int) playerJson["elo"];
+        GlobalVars.avatar_num = (int) playerJson["avatarId"];
+        GlobalVars.username = playerJson["name"].ToString();
+        GlobalVars.rank = Ranker.getRank(GlobalVars.ELO);// Not completed with elo calculations yet
+        GlobalVars.rank_sprite = Ranker.getSprite(GlobalVars.rank);// incomplete
 
         GlobalVars.square_avatar = Avatar_Cropper.get_avatar_no_crop(GlobalVars.avatar_num);
         GlobalVars.avatar = Avatar_Cropper.get_avatar(GlobalVars.avatar_num);
-    }
-
-    // call to the server to get the player's current avatar number
-    private IEnumerator get_avatar_num()
-    {
-        
-        string url = "";// TODO
-        www = new WWW(url);
         yield return www;
-        GlobalVars.avatar_num = int.Parse(www.text);
     }
 
     // call to the server to get the player_id from fb_id
     private IEnumerator get_player_id(string fb_id)
     {
-        string url = "" + fb_id;//TODO
+        string url = "http://104.131.99.193/register" + fb_id;//TODO
         WWW www = new WWW(url);
         yield return www;
         GlobalVars.player_id = www.text;
