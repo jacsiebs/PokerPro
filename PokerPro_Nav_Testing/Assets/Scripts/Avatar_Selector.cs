@@ -36,7 +36,7 @@ public class Avatar_Selector : MonoBehaviour {
     private static IEnumerator change_avatar_helper(int avatar_num)
     {
         // send the update request
-        string url = "http://104.131.99.193/changeStat/avatarId/" + GlobalVars.player_id + "/" + avatar_num;// placeholder url
+        string url = "http://104.131.99.193/changeStat/" + GlobalVars.player_id + "/avatarId/" + avatar_num;
         WWW www = new WWW(url);
         yield return www;
         GlobalVars.avatar_num = avatar_num;

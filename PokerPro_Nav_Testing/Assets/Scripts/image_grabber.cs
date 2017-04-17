@@ -51,15 +51,14 @@ public class image_grabber : MonoBehaviour {
         var playerJson = JsonMapper.ToObject(jsonString);// parse
         GlobalVars.ELO = (int) playerJson["elo"];
         GlobalVars.avatar_num = (int) playerJson["avatarId"];
-        Debug.Log("Main menu: av_num = " + GlobalVars.avatar_num);
         GlobalVars.username = playerJson["name"].ToString();
+        Debug.Log(GlobalVars.username + " has been logged in.");
         //GlobalVars.rank = Ranker.getRank(GlobalVars.ELO);// Not completed with elo calculations yet
         //GlobalVars.rank_sprite = Ranker.getSprite(GlobalVars.rank);// incomplete
 
         GlobalVars.square_avatar = Avatar_Cropper.get_avatar_no_crop(GlobalVars.avatar_num);
         GlobalVars.avatar = Avatar_Cropper.get_avatar(GlobalVars.avatar_num);
-        isDone = true;
-        
+        isDone = true;      
     }
 
     // call to the server to get the player_id from fb_id
@@ -92,7 +91,7 @@ public class image_grabber : MonoBehaviour {
             Debug.Log("You wouldn't dare call this before awake and loads.");
         avatar.sprite = GlobalVars.square_avatar;
         rank.sprite = GlobalVars.rank_sprite;
-        Debug.Log(GlobalVars.username);
+        Debug.Log("username: " + GlobalVars.username);
         username.text = GlobalVars.username;
     }
 

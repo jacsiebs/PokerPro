@@ -45,6 +45,18 @@ public class DebugChangeCard : MonoBehaviour
         public static bool dealVar = false;
         // true only for first game state
         public static bool init = true;
+        public static bool leaveReady = false;
+    }
+
+    public static class Stats {
+        public static int old_chip_count = GlobalVars.init_chips;
+        public static int handsWon = 0;
+        public static int handsLost = 0;
+        public static int handsPlayed = 0;
+        public static int chipsWon = 0;
+        public static int chipsLost = 0;
+        public static int netChipGain = 0;
+        public static int ELO = GlobalVars.ELO;
     }
 
     void Start()
@@ -59,6 +71,10 @@ public class DebugChangeCard : MonoBehaviour
     void Update()
     {
         //StartCoroutine(checkNewState());
+        if(gameGlobals.leaveReady)
+        {
+            StartCoroutine(leaveHelper());
+        }
         parseGameState();
         checkingForCCards();
     }
@@ -89,6 +105,57 @@ public class DebugChangeCard : MonoBehaviour
             Debug.Log("Can't locate the slider.");
         }
         // end add
+    }
+
+    // use for on-click
+    public void leaveGame()
+    {
+        updateStats();
+        //updateELO(chip gain);
+        sendStats(true);
+        Debug.Log("Leaving the game...");
+    }
+
+    private IEnumerator leaveHelper()
+    {
+        string url = "http://104.131.99.193/leave/" + GlobalVars.game_id + "/" + GlobalVars.player_id;
+        www = new WWW(url);
+        yield return www;
+        GlobalVars.game_id = "-1";
+        // return to main menu
+        Debug.Log("Game succesfully left. Returning to the main menu.");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Main_Menu_Scene");
+    }
+
+    // updates the server with the new stats
+    private void sendStats(bool leavingGame)
+    {
+        Debug.Log("Sending updated stats to the server");
+        // all stats should be up 
+        // ELO should be updated from leaving the game
+        StartCoroutine(sendAStat("elo", GlobalVars.ELO.ToString(), false, leavingGame));
+        StartCoroutine(sendAStat("chipsWon", Stats.chipsWon.ToString(), false, leavingGame));
+        StartCoroutine(sendAStat("chipsLost", Stats.chipsLost.ToString(), false, leavingGame));
+        StartCoroutine(sendAStat("handsWon", Stats.handsWon.ToString(), false, leavingGame));
+        StartCoroutine(sendAStat("handsLost", Stats.handsLost.ToString(), true, leavingGame));
+    }
+
+    private IEnumerator sendAStat(string statName, string statValue, bool lastCall, bool leavingGame)
+    {
+        string url = "http://104.131.99.193/changeStat/" + GlobalVars.player_id + "/" + statName + "/" + statValue;
+        WWW post = new WWW(url);
+        yield return post;
+        Debug.Log("Sent " + statName + " to server.");
+        Debug.Log(post.text);
+        if(post.error != null)
+        {
+            Debug.Log("WWW error on sending stats: " + www.error);
+        }
+        // set leaveReady if this is the final stat update
+        if(lastCall && leavingGame)
+        {
+            gameGlobals.leaveReady = true;
+        }
     }
 
     //this method gets the JSON from the server and stores it as a object.
@@ -176,6 +243,7 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
         gameGlobals.me = (int)gameState["me"];
         gameGlobals.numCCards = gameState["commonCards"].Count;
+        Debug.Log("Num Common Cards:" + gameGlobals.numCCards);
         //gameGlobals.handNum = gameState["hand"].ToString();
         gameGlobals.isLoaded = true;
         Debug.Log("Pot: " + gameState["pot"]);// delete this
@@ -213,7 +281,6 @@ public class DebugChangeCard : MonoBehaviour
         yield return www;
         Debug.Log("Got a gamestate.");
         jsonString = www.text;
-        Debug.Log(jsonString);
         gameGlobals.wwwLoaded = true;
     }
 
@@ -269,12 +336,35 @@ public class DebugChangeCard : MonoBehaviour
             gameGlobals.recallVar = true;
             // reset current hand
             gameGlobals.handNum = gameState["hand"].ToString();
+            // update stats
+            updateStats();
         }
         else
         {
             // not new hand, do nothing
         }
         //Debug.Log("Returning from checkNewRound.");
+    }
+
+    // updates the player stats for this hand
+    public void updateStats()
+    {
+        // chips
+        if (Stats.old_chip_count > GlobalVars.chips) {
+            Stats.chipsLost = Stats.old_chip_count - GlobalVars.chips;
+            Stats.netChipGain -= Stats.chipsLost;
+            Stats.handsWon++;
+        } else if(Stats.old_chip_count < GlobalVars.chips)
+        {
+            Stats.chipsWon = GlobalVars.chips - Stats.old_chip_count;
+            Stats.netChipGain += Stats.chipsWon;
+            Stats.handsWon--;
+        }
+        // hand count
+        Stats.handsPlayed++;
+        // update the old chip count with current chip count
+        Stats.old_chip_count = GlobalVars.chips;
+        // ELO not updated until the player leaves the game or the game ends
     }
 
     //this method is used to check if it is the user's turn or not.
@@ -353,7 +443,7 @@ public class DebugChangeCard : MonoBehaviour
             dealCards(); // re-deal cards right after we recall them
             gameGlobals.recallVar = false; // to make sure this happens once
         }
-        //Debug.Log ("Num Common Cards:" + gameGlobals.numCCards);
+        
         if (gameGlobals.numCCards == 3 && !gameGlobals.cc1)
         {
             gameGlobals.cc1 = true;
@@ -565,19 +655,36 @@ public class DebugChangeCard : MonoBehaviour
                 else
                     Display_Message.print_message("You have bet " + GlobalVars.bet + ".");
 
+                // subtract the bet from the chips
+                GlobalVars.chips -= GlobalVars.bet;
+
                 // update the gamestate
                 Debug.Log("Sent bet and got a gamestate.");
-                string jsonString = www.text;
+                jsonString = www.text;
                 Debug.Log(jsonString); // REMOVE later
                 updateGameState();
                 // reset the bet needed to call
                 GlobalVars.curr_bet = 0;
-                //eckNewRound(gameStateJson["hand"].ToString());
-                // disable the bet UI
-                Disable_Buttons.disableButtons();
                 theSlider.value = 0;// also makes GlobalVars.bet=0
-                // we just bet, so lets ask for a new game state right away
-                StartCoroutine(getUpdatedGameState());
+
+                if (isTurn())
+                {
+                    Debug.Log("It's my turn");
+                    //enable bet buttons
+                    Disable_Buttons.enableButtons();
+                    turnOnSlider();
+                    //make a bet
+                    gameGlobals.wwwLoaded = false;
+                }
+                else
+                {
+                    Debug.Log("Not my turn");
+                    //make sure bottons are bisabled, do nothing
+                    Disable_Buttons.disableButtons();
+                    turnOffSlider();
+                    gameGlobals.wwwLoaded = false;
+                    StartCoroutine(getUpdatedGameState());
+                }
             }
         }
     }
