@@ -140,6 +140,8 @@ public class DebugChangeCard : MonoBehaviour
             if (isTurn())
             {
                 Debug.Log("It's my turn");
+                cardModel[gameGlobals.me].notifyTurn(myCards[0]);
+                cardModel[gameGlobals.me + gameGlobals.numGamePlayers].notifyTurn(myCards[1]);
                 //enable bet buttons
                 Disable_Buttons.enableButtons();
                 turnOnSlider();
@@ -181,6 +183,7 @@ public class DebugChangeCard : MonoBehaviour
         Debug.Log("Pot: " + gameState["pot"]);// delete this
         GlobalVars.Pot = (int)gameState["pot"];
         Debug.Log("Whose turn is it?");
+        Debug.Log("Num Common Cards:" + gameGlobals.numCCards);
         checkNewRound(gameState["hand"].ToString());
         //dealCards(); //deal cards to players
     }
@@ -202,7 +205,7 @@ public class DebugChangeCard : MonoBehaviour
         {
             StartCoroutine(askForInitialGameState());
         }
-        Debug.Log(jsonString);
+        //Debug.Log(jsonString);
         gameGlobals.wwwLoaded = true;
     }
 
@@ -213,7 +216,7 @@ public class DebugChangeCard : MonoBehaviour
         yield return www;
         Debug.Log("Got a gamestate.");
         jsonString = www.text;
-        Debug.Log(jsonString);
+        //Debug.Log(jsonString);
         gameGlobals.wwwLoaded = true;
     }
 
@@ -567,17 +570,36 @@ public class DebugChangeCard : MonoBehaviour
 
                 // update the gamestate
                 Debug.Log("Sent bet and got a gamestate.");
-                string jsonString = www.text;
+                jsonString = www.text;
                 Debug.Log(jsonString); // REMOVE later
                 updateGameState();
                 // reset the bet needed to call
                 GlobalVars.curr_bet = 0;
+                theSlider.value = 0;// also makes GlobalVars.bet=0
+                if (isTurn())
+                {
+                    Debug.Log("It's my turn");
+                    //enable bet buttons
+                    Disable_Buttons.enableButtons();
+                    turnOnSlider();
+                    //make a bet
+                    gameGlobals.wwwLoaded = false;
+                }
+                else
+                {
+                    Debug.Log("Not my turn");
+                    //make sure bottons are bisabled, do nothing
+                    Disable_Buttons.disableButtons();
+                    turnOffSlider();
+                    gameGlobals.wwwLoaded = false;
+                    StartCoroutine(getUpdatedGameState());
+                }
                 //eckNewRound(gameStateJson["hand"].ToString());
                 // disable the bet UI
-                Disable_Buttons.disableButtons();
-                theSlider.value = 0;// also makes GlobalVars.bet=0
+                //Disable_Buttons.disableButtons();
+                
                 // we just bet, so lets ask for a new game state right away
-                StartCoroutine(getUpdatedGameState());
+                //StartCoroutine(getUpdatedGameState());
             }
         }
     }
@@ -589,10 +611,10 @@ public class DebugChangeCard : MonoBehaviour
     // will provide non-duplicates when working correctly.
     private void OnGUI()
     {
-        if (GUI.Button(new Rect(10, 10, 175, 28), "Deal from deck: 2 Players"))
+        if (GUI.Button(new Rect(10, 10, 175, 28), "Deal from deck: 8 Players"))
         {
             //simulate 2 players
-			int numGamePlayers = 2;
+			int numGamePlayers = 8;
             //set card travel speed
             float cardSpeed = 0.35f;
 			for (int k = 0; k < numGamePlayers; k++) 
@@ -611,7 +633,7 @@ public class DebugChangeCard : MonoBehaviour
             int playerSeatPlaceholder = 1;
             //the following two lines are for when the matchmaking succeeds and the game state is pulled:
             int cardIndex0 = 2;//myCards[0];
-            int cardIndex1 = 15;//myCards[1];
+            int cardIndex1 = 19;//myCards[1];
                                 // if we want to see what the cards are, we can uncomment the following two lines:
                                 //print(cardIndex0);
                                 //print(cardIndex1);
@@ -643,12 +665,14 @@ public class DebugChangeCard : MonoBehaviour
             cardsInPlay = 0;
         }
 
-        if (GUI.Button(new Rect(10, 90, 180, 28), "Simulate fold for Player 7"))
+        if (GUI.Button(new Rect(10, 90, 180, 28), "Simulate turn for player 2, 8p"))
         {
             //Player 6 will have cardModels[6] and cardModels[14]
             //this could be derrived from a game state check instead of hard coded
-            cardModel[6].PlayerFold();
-            cardModel[14].PlayerFold();
+            //cardModel[6].PlayerFold();
+            //cardModel[14].PlayerFold();
+            cardModel[1].notifyTurn(2);
+            cardModel[9].notifyTurn(19);
         }
 
         //we want to provide the option for players to show their hands at the end of the round.
