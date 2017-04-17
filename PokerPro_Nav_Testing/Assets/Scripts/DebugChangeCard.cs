@@ -130,18 +130,22 @@ public class DebugChangeCard : MonoBehaviour
     {
         if (gameGlobals.wwwLoaded)
         {
+            Debug.Log(jsonString); //REMOVE latger
+            updateGameState();
+            //dont start flashing until we finish dealing, will flash after cards flip in dealCards()
+            if (isTurn() && !gameGlobals.init)
+            {
+                cardModel[gameGlobals.me].notifyTurn(myCards[0]);
+                cardModel[gameGlobals.me + gameGlobals.numGamePlayers].notifyTurn(myCards[1]);
+            }
             if (gameGlobals.init)
             {
                 gameGlobals.dealVar = true;
                 gameGlobals.init = false;
             }
-            Debug.Log(jsonString); //REMOVE latger
-            updateGameState();
             if (isTurn())
             {
                 Debug.Log("It's my turn");
-                cardModel[gameGlobals.me].notifyTurn(myCards[0]);
-                cardModel[gameGlobals.me + gameGlobals.numGamePlayers].notifyTurn(myCards[1]);
                 //enable bet buttons
                 Disable_Buttons.enableButtons();
                 turnOnSlider();
@@ -226,34 +230,6 @@ public class DebugChangeCard : MonoBehaviour
         yield return null;
         Debug.Log("Submitting gamestate request.");
         StartCoroutine(askForGameState());//askForGSMethod();
-        // wait for the server response
-        /*Debug.Log(jsonString); //REMOVE later
-        var gameStateJson = JsonMapper.ToObject(jsonString);
-        gameState = gameStateJson;
-        gameGlobals.numGamePlayers = gameState["players"].Count;
-        gameGlobals.me = (int)gameState["me"];
-        gameGlobals.numCCards = gameState["commonCards"].Count;
-        gameGlobals.isLoaded = true;
-        Debug.Log("Pot: " + gameState["pot"]);// delete this
-        GlobalVars.Pot = (int)gameState["pot"];
-        checkNewRound(gameState["hand"].ToString());
-        // do we need to reset game state vales here? Might not need to   
-        Debug.Log("Whose turn is it?");
-        if (isTurn())
-        {
-            Debug.Log("It's my turn");
-            //enable bet buttons and bet slider
-            UpdateBet.enableSlider();
-            Disable_Buttons.enableButtons();
-            // finished, getUpdatedGamestate will becalled again by submit bet
-        }
-        else
-        {
-            Debug.Log("Not my turn");
-            //make sure bottons are bisabled, do nothing
-            Disable_Buttons.disableButtons();
-            getUpdatedGameState();
-        }*/
     }
 
     // check to see if we have a new hand dealt
@@ -408,6 +384,11 @@ public class DebugChangeCard : MonoBehaviour
 
         cardModel[playerSeatPlaceholder + numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + numGamePlayers].cardBackOrig,
             cardModel[playerSeatPlaceholder + numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder + numGamePlayers, numGamePlayers, cardSpeed);
+        if (isTurn())
+        {
+            cardModel[gameGlobals.me].notifyTurn(myCards[0]);
+            cardModel[gameGlobals.me + gameGlobals.numGamePlayers].notifyTurn(myCards[1]);
+        }
     }
 
     private void dealRiverF3()
