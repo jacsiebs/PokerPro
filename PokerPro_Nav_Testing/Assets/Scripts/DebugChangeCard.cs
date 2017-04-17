@@ -197,13 +197,18 @@ public class DebugChangeCard : MonoBehaviour
     {
         if (gameGlobals.wwwLoaded)
         {
+            Debug.Log(jsonString); //REMOVE latger
+            updateGameState();
+            if (isTurn() && !gameGlobals.init)
+            {
+                cardModel[gameGlobals.me].notifyTurn(myCards[0]);
+                cardModel[gameGlobals.me + gameGlobals.numGamePlayers].notifyTurn(myCards[1]);
+            }
             if (gameGlobals.init)
             {
                 gameGlobals.dealVar = true;
                 gameGlobals.init = false;
             }
-            Debug.Log(jsonString); //REMOVE latger
-            updateGameState();
             if (isTurn())
             {
                 Debug.Log("It's my turn");
