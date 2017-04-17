@@ -41,6 +41,10 @@ public class DebugChangeCard : MonoBehaviour
         public static bool recallVar;
         // www finished 
         public static bool wwwLoaded;
+
+        public static bool dealVar = false;
+        // true only for first game state
+        public static bool init = true;
     }
 
     void Start()
@@ -54,9 +58,9 @@ public class DebugChangeCard : MonoBehaviour
 
     void Update()
     {
-        StartCoroutine(checkingForCCards());
         //StartCoroutine(checkNewState());
         parseGameState();
+        checkingForCCards();
     }
 
     void Awake()
@@ -64,6 +68,7 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.wwwLoaded = false;
         gameGlobals.isLoaded = false;
         List<GameObject> cards = new List<GameObject>();
+        gameGlobals.handNum = "1";
         //find all the card objects in the scene and add them to a list to reference later
         for (int k = 25; k > -1; k--)
         {
@@ -125,23 +130,19 @@ public class DebugChangeCard : MonoBehaviour
     {
         if (gameGlobals.wwwLoaded)
         {
+            if (gameGlobals.init)
+            {
+                gameGlobals.dealVar = true;
+                gameGlobals.init = false;
+            }
             Debug.Log(jsonString); //REMOVE latger
-            var gameStateJson = JsonMapper.ToObject(jsonString);
-            gameState = gameStateJson;
-            numGamePlayers = gameState["players"].Count;
-            gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
-            gameGlobals.me = (int)gameState["me"];
-            gameGlobals.handNum = gameState["hand"].ToString();
-            gameGlobals.isLoaded = true;
-            Debug.Log("Pot: " + gameState["pot"]);// delete this
-            GlobalVars.Pot = (int)gameState["pot"];
-            Debug.Log("Whose turn is it?");
-            dealCards(); //deal cards to players
+            updateGameState();
             if (isTurn())
             {
                 Debug.Log("It's my turn");
                 //enable bet buttons
                 Disable_Buttons.enableButtons();
+                turnOnSlider();
                 //make a bet
                 gameGlobals.wwwLoaded = false;
             }
@@ -150,6 +151,7 @@ public class DebugChangeCard : MonoBehaviour
                 Debug.Log("Not my turn");
                 //make sure bottons are bisabled, do nothing
                 Disable_Buttons.disableButtons();
+                turnOffSlider();
                 gameGlobals.wwwLoaded = false;
                 StartCoroutine(getUpdatedGameState());
             }
@@ -166,6 +168,23 @@ public class DebugChangeCard : MonoBehaviour
         
     }*/
 
+    public void updateGameState()
+    {
+        var gameStateJson = JsonMapper.ToObject(jsonString);
+        gameState = gameStateJson;
+        numGamePlayers = gameState["players"].Count;
+        gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
+        gameGlobals.me = (int)gameState["me"];
+        gameGlobals.numCCards = gameState["commonCards"].Count;
+        //gameGlobals.handNum = gameState["hand"].ToString();
+        gameGlobals.isLoaded = true;
+        Debug.Log("Pot: " + gameState["pot"]);// delete this
+        GlobalVars.Pot = (int)gameState["pot"];
+        Debug.Log("Whose turn is it?");
+        checkNewRound(gameState["hand"].ToString());
+        //dealCards(); //deal cards to players
+    }
+
     public IEnumerator askForInitialGameState()
     {
         //yield return new WaitForSeconds(0.15f);
@@ -179,7 +198,7 @@ public class DebugChangeCard : MonoBehaviour
             var testJson = JsonMapper.ToObject(jsonString);
             string playerCardsYet = (string) testJson["currentPlayer"];
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException e)
         {
             StartCoroutine(askForInitialGameState());
         }
@@ -255,7 +274,7 @@ public class DebugChangeCard : MonoBehaviour
         {
             // not new hand, do nothing
         }
-        Debug.Log("Returning from checkNewRound.");
+        //Debug.Log("Returning from checkNewRound.");
     }
 
     //this method is used to check if it is the user's turn or not.
@@ -269,6 +288,7 @@ public class DebugChangeCard : MonoBehaviour
         }
         else
         {
+            //Debug.Log("NOT MY TURN - from isTurn()");
             return false;
         }
     }
@@ -316,10 +336,16 @@ public class DebugChangeCard : MonoBehaviour
         print("FIFTH CARD: " + commonCards[4]);
     }
 
-    private IEnumerator checkingForCCards()
+    private void checkingForCCards()
     {
+        if (gameGlobals.dealVar)
+        {
+            dealCards();
+            gameGlobals.dealVar = false;
+        }
+
         //Debug.Log ("BEFORE");
-        yield return null;
+        //yield return null;
         if (gameGlobals.recallVar)
         {
             // recall cards to deck
@@ -543,32 +569,15 @@ public class DebugChangeCard : MonoBehaviour
                 Debug.Log("Sent bet and got a gamestate.");
                 string jsonString = www.text;
                 Debug.Log(jsonString); // REMOVE later
-                var gameStateJson = JsonMapper.ToObject(jsonString);
-                gameState = gameStateJson;
-                gameGlobals.numGamePlayers = gameStateJson["players"].Count;
-                gameGlobals.me = (int)gameStateJson["me"];
-                gameGlobals.numCCards = gameStateJson["commonCards"].Count;
-                gameGlobals.isLoaded = true;
-                Debug.Log("Pot: " + gameStateJson["pot"]);// delete this
-                GlobalVars.Pot = (int)gameStateJson["pot"];
-                if (!gameGlobals.handNum.Equals(gameStateJson["hand"].ToString()))
-                {
-                    Debug.Log("We have a new hand!");
-                    // set recall var to initiate recall and redeal for new game state
-                    gameGlobals.recallVar = true;
-                }
-                else
-                {
-                    //do nothing
-                }
+                updateGameState();
                 // reset the bet needed to call
                 GlobalVars.curr_bet = 0;
-
+                //eckNewRound(gameStateJson["hand"].ToString());
                 // disable the bet UI
                 Disable_Buttons.disableButtons();
                 theSlider.value = 0;// also makes GlobalVars.bet=0
                 // we just bet, so lets ask for a new game state right away
-                getUpdatedGameState();
+                StartCoroutine(getUpdatedGameState());
             }
         }
     }
