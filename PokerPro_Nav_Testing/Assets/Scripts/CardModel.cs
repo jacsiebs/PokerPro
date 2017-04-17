@@ -6,24 +6,25 @@ public class CardModel : MonoBehaviour {
     SpriteRenderer spriteRenderer;
 
     public Sprite[] cardFaces;
-    
+
+    public Sprite[] highlightCardFaces;
 
     //Locations for each player spot at the table
-    private Vector3 pos0 = new Vector3(3.8f, 2f, 0);
-    private Vector3 pos1 = new Vector3(4.75f, -0.45f, 0);
-    private Vector3 pos2 = new Vector3(3.8f, -2.75f, 0);
-    private Vector3 pos3 = new Vector3(0.35f, -2.85f, 0);
-    private Vector3 pos4 = new Vector3(-3.15f, -2.85f, 0);
-    private Vector3 pos5 = new Vector3(-6.7f, -2.65f, 0);
-    private Vector3 pos6 = new Vector3(-7.2f, 0, 0);
-    private Vector3 pos7 = new Vector3(-6.15f, 2f, 0);
+    private Vector3 pos0 = new Vector3(1.95f, 3.8f, 0);
+    private Vector3 pos1 = new Vector3(4.2f, -0.2f, 0);
+    private Vector3 pos2 = new Vector3(1.95f, -2f, 0);
+    private Vector3 pos3 = new Vector3(-2.95f, -2f, 0);
+    private Vector3 pos4 = new Vector3(-7.8f, -2f, 0);
+    private Vector3 pos5 = new Vector3(-7.1f, -0.1f, 0);
+    private Vector3 pos6 = new Vector3(-7f, 2.6f, 0);
+    private Vector3 pos7 = new Vector3(-3f, 3.8f, 0);
 
     //Locations for the flop/river cards
-    private Vector3 posA = new Vector3(-1, 0, 0);
-    private Vector3 posB = new Vector3(0, 0, 0);
-    private Vector3 posC = new Vector3(1, 0, 0);
-    private Vector3 posD = new Vector3(2, 0, 0);
-    private Vector3 posE = new Vector3(3, 0, 0);
+    private Vector3 posA = new Vector3(-2, 0.71f, 0);
+    private Vector3 posB = new Vector3(-1, 0.71f, 0);
+    private Vector3 posC = new Vector3(0, 0.71f, 0);
+    private Vector3 posD = new Vector3(1, 0.71f, 0);
+    private Vector3 posE = new Vector3(2, 0.71f, 0);
 
     //Save the original location & card back for use in card recall
     private Vector3 home;
@@ -53,6 +54,34 @@ public class CardModel : MonoBehaviour {
         //save the starting location & card back sprite
         home = transform.position;
         cardBackOrig = spriteRenderer.sprite;
+    }
+
+    //flashes the green cards to notify the player that it is their turn
+    public void notifyTurn(int index)
+    {
+        StartCoroutine(toggleGreen(index));
+    }
+
+    private IEnumerator toggleGreen(int index)
+    {
+        yield return null;
+        for (int i = 0; i < 6; i++)
+        {
+            yield return new WaitForSeconds(0.2f);
+            if ((i % 2) == 0)
+            {
+                spriteRenderer.sprite = highlightCardFaces[index];
+            }
+            else
+            {
+                spriteRenderer.sprite = cardFaces[index];
+            }
+        }      
+    }
+
+    public void notifyOpponentTurn()
+    {
+
     }
 
     public void StartFly(int dealNum, float speed, int numGamePlayers)
