@@ -62,6 +62,12 @@ public class CardModel : MonoBehaviour {
         StartCoroutine(toggleGreen(index));
     }
 
+    public void notifyOpponentTurn()
+    {
+        // the 52nd index is the green version of the card back
+        StartCoroutine(toggleGreen(52));
+    }
+
     private IEnumerator toggleGreen(int index)
     {
         yield return null;
@@ -74,14 +80,17 @@ public class CardModel : MonoBehaviour {
             }
             else
             {
-                spriteRenderer.sprite = cardFaces[index];
+                if (index == 52)
+                {
+                    spriteRenderer.sprite = cardBackOrig;
+                }
+                else
+                {
+                    spriteRenderer.sprite = cardFaces[index];
+                }
+                
             }
         }      
-    }
-
-    public void notifyOpponentTurn()
-    {
-
     }
 
     public void StartFly(int dealNum, float speed, int numGamePlayers)

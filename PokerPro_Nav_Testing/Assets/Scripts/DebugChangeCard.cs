@@ -19,7 +19,8 @@ public class DebugChangeCard : MonoBehaviour
     private int cardsInPlay = 0;
     // slider obj
     private Slider theSlider;
-
+    // dealter button
+    private DealerButtonAssign dealerButton;
 
     public static class gameGlobals
     {
@@ -60,7 +61,7 @@ public class DebugChangeCard : MonoBehaviour
     }
 
     void Start()
-    {      
+    {
         // this will be uncommented once matchmaking is successful.
         // this method has been manually tested and works well/
         // manual test included creating a game via web browser and hard coding the game_id
@@ -85,6 +86,7 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.isLoaded = false;
         List<GameObject> cards = new List<GameObject>();
         gameGlobals.handNum = "1";
+
         //find all the card objects in the scene and add them to a list to reference later
         for (int k = 25; k > -1; k--)
         {
@@ -93,6 +95,16 @@ public class DebugChangeCard : MonoBehaviour
         for (int k = 0; k < 25; k++)
         {
             cardModel[k] = cards[k].GetComponent<CardModel>();
+        }
+        // find dealer chip
+        GameObject temp2 = GameObject.Find("DealerChip");
+        if (temp2 != null)
+        {
+            dealerButton = temp2.GetComponent<DealerButtonAssign>();
+        }
+        else
+        {
+            Debug.Log("Can't locate the dealer chip.");
         }
         // added from SubmitBet
         GameObject temp = GameObject.Find("Bet Slider");
@@ -164,68 +176,74 @@ public class DebugChangeCard : MonoBehaviour
     {
         //askForGSMethod();
         StartCoroutine(askForInitialGameState());
-        // wait for the server response
-        /*Debug.Log(jsonString); //REMOVE latger
-        var gameStateJson = JsonMapper.ToObject(jsonString);
-        gameState = gameStateJson;
-        numGamePlayers = gameState["players"].Count;
-        gameGlobals.numGamePlayers = numGamePlayers; //clean this up later
-        gameGlobals.me = (int)gameState["me"];
-        gameGlobals.handNum = gameState["hand"].ToString();
-        gameGlobals.isLoaded = true;
-        Debug.Log("Pot: " + gameState["pot"]);// delete this
-        GlobalVars.Pot = (int)gameState["pot"];
-        Debug.Log("Whose turn is it?");
-        dealCards(); //deal cards to players 
-        if (isTurn())
-        {
-            Debug.Log("It's my turn");
-            //enable bet buttons
-            Disable_Buttons.enableButtons();
-            //make a bet
-        }
-        else
-        {
-            Debug.Log("Not my turn");
-            //make sure bottons are bisabled, do nothing
-            Disable_Buttons.disableButtons();
-            getUpdatedGameState();
-        }*/
     }
 
     public void parseGameState()
     {
         if (gameGlobals.wwwLoaded)
         {
-            Debug.Log(jsonString); //REMOVE latger
-            updateGameState();
-            if (isTurn() && !gameGlobals.init)
-            {
-                cardModel[gameGlobals.me].notifyTurn(myCards[0]);
-                cardModel[gameGlobals.me + gameGlobals.numGamePlayers].notifyTurn(myCards[1]);
-            }
+            Display_Curr_Bet.update_player_names(jsonString);
+            Display_Curr_Bet.update_player_chips(jsonString);
             if (gameGlobals.init)
             {
-                gameGlobals.dealVar = true;
+                // only deal on init state
+                gameGlobals.dealVar = true; // we flahs cards if turn here
                 gameGlobals.init = false;
+                Debug.Log(jsonString); //REMOVE latger
+                updateGameState();
+                if (isTurn())
+                {
+                    Debug.Log("It's my turn");
+                    //enable bet buttons
+                    Disable_Buttons.enableButtons();
+                    turnOnSlider();
+                    //make a bet
+                    gameGlobals.wwwLoaded = false;
+                }
+                else
+                {
+                    Debug.Log("Not my turn");
+                    // flash opponents cards to indicate their turn
+                    cardModel[(int)gameState["currentPlayer"]].notifyOpponentTurn();
+                    cardModel[(int)gameState["currentPlayer"] + gameGlobals.numGamePlayers].notifyOpponentTurn();
+                    //make sure bottons are bisabled, do nothing
+                    Disable_Buttons.disableButtons();
+                    turnOffSlider();
+                    gameGlobals.wwwLoaded = false;
+                    getUpdatedGameState();
+                    //StartCoroutine(getUpdatedGameState());
+                }
+
             }
-            if (isTurn())
+            // non-init
+            else 
             {
-                Debug.Log("It's my turn");
-                //enable bet buttons
-                Disable_Buttons.enableButtons();
-                turnOnSlider();
-                //make a bet
-                gameGlobals.wwwLoaded = false;
-            }
-            else
-            {
-                Debug.Log("Not my turn");
-                //make sure bottons are bisabled, do nothing
-                Disable_Buttons.disableButtons();
-                turnOffSlider();
-                gameGlobals.wwwLoaded = false;
-                StartCoroutine(getUpdatedGameState());
+                Debug.Log(jsonString); //REMOVE latger
+                updateGameState();
+                if (isTurn())
+                {
+                    Debug.Log("It's my turn");
+                    cardModel[gameGlobals.me].notifyTurn(myCards[0]);
+                    cardModel[gameGlobals.me + gameGlobals.numGamePlayers].notifyTurn(myCards[1]);
+                    //enable bet buttons
+                    Disable_Buttons.enableButtons();
+                    turnOnSlider();
+                    //make a bet
+                    gameGlobals.wwwLoaded = false;
+                }
+                else
+                {
+                    Debug.Log("Not my turn\n" + jsonString);
+                    // flash opponents cards to indicate their turn
+                    cardModel[Int32.Parse(gameState["currentPlayer"].ToString())].notifyOpponentTurn();
+                    cardModel[Int32.Parse(gameState["currentPlayer"].ToString()) + gameGlobals.numGamePlayers].notifyOpponentTurn();
+                    //make sure bottons are bisabled, do nothing
+                    Disable_Buttons.disableButtons();
+                    turnOffSlider();
+                    gameGlobals.wwwLoaded = false;
+                    getUpdatedGameState();
+                    //StartCoroutine(getUpdatedGameState());
+                }
             }
         }
         else
@@ -234,11 +252,17 @@ public class DebugChangeCard : MonoBehaviour
         }
     }
 
-    /*public void askForGSMethod()
+    public int getOpponentPos()
     {
-        StartCoroutine(askForGameState());
-        
-    }*/
+        for (int i = 0; i < gameGlobals.numGamePlayers; i++)
+        {
+            if (gameState["players"][i]["id"].ToString().Equals(gameState["currentPlayer"].ToString()))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     public void updateGameState()
     {
@@ -255,17 +279,18 @@ public class DebugChangeCard : MonoBehaviour
         GlobalVars.Pot = (int)gameState["pot"];
         Debug.Log("Whose turn is it?");
         checkNewRound(gameState["hand"].ToString());
-        //dealCards(); //deal cards to players
+        // move dealer button to correct place
+        dealerButton.StartFly(Int32.Parse(gameState["db"].ToString()));
     }
 
     public IEnumerator askForInitialGameState()
     {
         //yield return new WaitForSeconds(0.15f);
         string url = "http://104.131.99.193/fastgame/" + GlobalVars.game_id + '/' + GlobalVars.player_id;
-        www = new WWW(url);
-        yield return www;
+        WWW www2 = new WWW(url);
+        yield return www2;
         Debug.Log("Got a gamestate.");
-        jsonString = www.text;
+        jsonString = www2.text;
         try
         {
             var testJson = JsonMapper.ToObject(jsonString);
@@ -276,6 +301,7 @@ public class DebugChangeCard : MonoBehaviour
             StartCoroutine(askForInitialGameState());
         }
         Debug.Log(jsonString);
+
         gameGlobals.wwwLoaded = true;
     }
 
@@ -290,39 +316,12 @@ public class DebugChangeCard : MonoBehaviour
     }
 
     //this method is used to long poll the server for an updated game state,
-    public IEnumerator getUpdatedGameState()
+    //public IEnumerator getUpdatedGameState()
+    public void getUpdatedGameState()
     {
-        yield return null;
+        //yield return null;
         Debug.Log("Submitting gamestate request.");
         StartCoroutine(askForGameState());//askForGSMethod();
-        // wait for the server response
-        /*Debug.Log(jsonString); //REMOVE later
-        var gameStateJson = JsonMapper.ToObject(jsonString);
-        gameState = gameStateJson;
-        gameGlobals.numGamePlayers = gameState["players"].Count;
-        gameGlobals.me = (int)gameState["me"];
-        gameGlobals.numCCards = gameState["commonCards"].Count;
-        gameGlobals.isLoaded = true;
-        Debug.Log("Pot: " + gameState["pot"]);// delete this
-        GlobalVars.Pot = (int)gameState["pot"];
-        checkNewRound(gameState["hand"].ToString());
-        // do we need to reset game state vales here? Might not need to   
-        Debug.Log("Whose turn is it?");
-        if (isTurn())
-        {
-            Debug.Log("It's my turn");
-            //enable bet buttons and bet slider
-            UpdateBet.enableSlider();
-            Disable_Buttons.enableButtons();
-            // finished, getUpdatedGamestate will becalled again by submit bet
-        }
-        else
-        {
-            Debug.Log("Not my turn");
-            //make sure bottons are bisabled, do nothing
-            Disable_Buttons.disableButtons();
-            getUpdatedGameState();
-        }*/
     }
 
     // check to see if we have a new hand dealt
@@ -500,6 +499,8 @@ public class DebugChangeCard : MonoBehaviour
 
         cardModel[playerSeatPlaceholder + numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + numGamePlayers].cardBackOrig,
             cardModel[playerSeatPlaceholder + numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder + numGamePlayers, numGamePlayers, cardSpeed);
+
+        //notify player if its their turn when they are dealt cards
     }
 
     private void dealRiverF3()
@@ -688,7 +689,8 @@ public class DebugChangeCard : MonoBehaviour
                     Disable_Buttons.disableButtons();
                     turnOffSlider();
                     gameGlobals.wwwLoaded = false;
-                    StartCoroutine(getUpdatedGameState());
+                    //StartCoroutine(getUpdatedGameState());
+                    getUpdatedGameState();
                 }
             }
         }
@@ -699,22 +701,25 @@ public class DebugChangeCard : MonoBehaviour
     // duplicates are only checked for local hands, so some may occur within other hands
     // or the river. This is okay, as it is just to demo how the machanics work. The server
     // will provide non-duplicates when working correctly.
+    //----------------------------------------------------------------------------
+    // *****UNCOMMENT BELOW TO ENABLE TESTING BUTTONS IF YOU WANT TO USE THEM*****
+    //----------------------------------------------------------------------------
     private void OnGUI()
     {
         if (GUI.Button(new Rect(10, 10, 175, 28), "Deal from deck: 2 Players"))
         {
             //simulate 2 players
-			int numGamePlayers = 2;
+            int numGamePlayers = 8;
             //set card travel speed
             float cardSpeed = 0.35f;
-			for (int k = 0; k < numGamePlayers; k++) 
-			{
-				cardModel[k].StartFly(k, cardSpeed, numGamePlayers);
-				cardsInPlay++;
-			}
+            for (int k = 0; k < numGamePlayers; k++)
+            {
+                cardModel[k].StartFly(k, cardSpeed, numGamePlayers);
+                cardsInPlay++;
+            }
             for (int i = 0; i < numGamePlayers; i++)
             {
-				cardModel[i+numGamePlayers].StartFly(i + numGamePlayers, cardSpeed, numGamePlayers);
+                cardModel[i + numGamePlayers].StartFly(i + numGamePlayers, cardSpeed, numGamePlayers);
                 cardsInPlay++;
             }
             // call the following method when the game state is active, need matchmaking to work first:
@@ -735,123 +740,163 @@ public class DebugChangeCard : MonoBehaviour
             cardModel[playerSeatPlaceholder + numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + numGamePlayers].cardBackOrig,
                 cardModel[playerSeatPlaceholder + numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder + numGamePlayers, numGamePlayers, cardSpeed);
 
-            /* cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig, 
-                 cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
-
-             cardModel[playerSeatPlaceholder+1].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder+1].cardBackOrig, 
-                 cardModel[playerSeatPlaceholder+1].cardFaces[cardIndex1], playerSeatPlaceholder+1, numGamePlayers, cardSpeed);
-             */
+            dealerButton.StartFly(2);
         }
 
         // this test recalls all the cards currently in play
         // you can think of this as a psudo-shuffle animation
-        if(GUI.Button(new Rect(10, 50, 120, 28), "Recall cards"))
+        if (GUI.Button(new Rect(10, 50, 120, 28), "Test Opponent Player 3"))
         {
-            float cardSpeed = 0.35f;
-            for (int i = 0; i < cardsInPlay; i++)
-            {
-                cardModel[i].StartRecall(cardSpeed);
-            }
-            cardsInPlay = 0;
-        }
-
-        if (GUI.Button(new Rect(10, 90, 180, 28), "Simulate fold for Player 7"))
-        {
-            //Player 6 will have cardModels[6] and cardModels[14]
-            //this could be derrived from a game state check instead of hard coded
-            cardModel[6].PlayerFold();
-            cardModel[14].PlayerFold();
-        }
-
-        //we want to provide the option for players to show their hands at the end of the round.
-        //we need to add a button for this for the next iteration, but this simulates what it does.
-        if (GUI.Button(new Rect(10, 130, 210, 28), "Simulate show for Players 1, 4, 7"))
-        {
-            for (int i = 0; i < 8; i+=3)
-            {
-                float cardSpeed = 0.35f;
-                //Flip player's card for them to see
-                int playerSeatPlaceholder = i;
-                //Simulate deal from shuffle deck from server
-                int cardIndex0 = UnityEngine.Random.Range(0, 51);
-                int cardIndex1 = cardIndex0;
-                //check for no duplicates
-                while (cardIndex1 == cardIndex0)
-                {
-                    cardIndex1 = UnityEngine.Random.Range(0, 51);
-                }
-                //we want to show right away, so set this to 0 for no delay
-                int numGamePlayers = 0;
-                //flip the cards
-                cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig,
-                    cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
-
-                cardModel[playerSeatPlaceholder + 8].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + 8].cardBackOrig,
-                    cardModel[playerSeatPlaceholder + 8].cardFaces[cardIndex1], playerSeatPlaceholder + 8, numGamePlayers, cardSpeed);
-            }
-        }
-
-        if (GUI.Button(new Rect(10, 170, 180, 28), "Simulate river dealing"))
-        {
-            //simulate for numGamePlayers = 8
-            int numGamePlayers = 8;
-            for (int i = 0; i < 3; i++)
-            {
-                float cardSpeed = 0.35f;
-                cardModel[2*numGamePlayers+i].StartRiverDeal(i, cardSpeed);
-                cardsInPlay++;
-                //use cards dealt from server, commented becuase we can't proceed past matchmaking
-                // uncomment to activte. Tested manually and it works.
-                //int cardIndex = commonCards[i];
-                // for now we will simulate a card from there server with:
-                int cardIndex = UnityEngine.Random.Range(0, 51);
-                //we want to show right away, so set this to 0 for no delay
-                cardModel[2*numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2*numGamePlayers + i].cardBackOrig,
-                    cardModel[2*numGamePlayers + i].cardFaces[cardIndex], (2*numGamePlayers + i), 0, cardSpeed);
-            }
-        }
-
-        if (GUI.Button(new Rect(200, 10, 200, 28), "Simulate river dealing + 1st card"))
-        {
-            //simulate for numGamePlayers = 8
-            int numGamePlayers = 8;
-            for (int i = 3; i < 4; i++)
-            {
-                float cardSpeed = 0.35f;
-                cardModel[2 * numGamePlayers + i].StartRiverDeal(i, cardSpeed);
-                cardsInPlay++;
-                //use cards dealt from server, commented for reasons outlined above
-                //int cardIndex = commonCards[i];
-                //simulate server dealt card:
-                int cardIndex = UnityEngine.Random.Range(0, 51);
-                //we want to show right away, so set this to 0 for no delay
-                cardModel[2 * numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2 * numGamePlayers + i].cardBackOrig,
-                    cardModel[2 * numGamePlayers + i].cardFaces[cardIndex], (2 * numGamePlayers + i), 0, cardSpeed);
-            }
-        }
-
-        if (GUI.Button(new Rect(410, 10, 200, 28), "Simulate river dealing + 2nd card"))
-        {
-            //simulate for numGamePlayers = 8
-            int numGamePlayers = 8;
-            for (int i = 4; i < 5; i++)
-            {
-                float cardSpeed = 0.35f;
-                cardModel[2 * numGamePlayers + i].StartRiverDeal(i, cardSpeed);
-                cardsInPlay++;
-                //use cards dealt from server
-                //int cardIndex = commonCards[i];
-                //simulate server dealt card:
-                int cardIndex = UnityEngine.Random.Range(0, 51);
-                //we want to show right away, so set this to 0 for no delay
-                cardModel[2 * numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2 * numGamePlayers + i].cardBackOrig,
-                    cardModel[2 * numGamePlayers + i].cardFaces[cardIndex], (2 * numGamePlayers + i), 0, cardSpeed);
-            }
+            cardModel[2].notifyOpponentTurn();
+            cardModel[7].notifyOpponentTurn();
         }
     }
+            /*private void OnGUI()
+            {
+                if (GUI.Button(new Rect(10, 10, 175, 28), "Deal from deck: 2 Players"))
+                {
+                    //simulate 2 players
+                    int numGamePlayers = 2;
+                    //set card travel speed
+                    float cardSpeed = 0.35f;
+                    for (int k = 0; k < numGamePlayers; k++) 
+                    {
+                        cardModel[k].StartFly(k, cardSpeed, numGamePlayers);
+                        cardsInPlay++;
+                    }
+                    for (int i = 0; i < numGamePlayers; i++)
+                    {
+                        cardModel[i+numGamePlayers].StartFly(i + numGamePlayers, cardSpeed, numGamePlayers);
+                        cardsInPlay++;
+                    }
+                    // call the following method when the game state is active, need matchmaking to work first:
+                    //parseMyCards();
+                    //Flip player's card for them to see
+                    int playerSeatPlaceholder = 1;
+                    //the following two lines are for when the matchmaking succeeds and the game state is pulled:
+                    int cardIndex0 = 2;//myCards[0];
+                    int cardIndex1 = 15;//myCards[1];
+                                        // if we want to see what the cards are, we can uncomment the following two lines:
+                                        //print(cardIndex0);
+                                        //print(cardIndex1);
+                                        //flip the two player cards for them to see
 
-    //this converts the server given data 'rank' and 'type' to a card face index from 0-51
-    private int convertToInt(string rank, string type)
+                    cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig,
+                        cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
+
+                    cardModel[playerSeatPlaceholder + numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + numGamePlayers].cardBackOrig,
+                        cardModel[playerSeatPlaceholder + numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder + numGamePlayers, numGamePlayers, cardSpeed);
+                }
+
+                // this test recalls all the cards currently in play
+                // you can think of this as a psudo-shuffle animation
+                if(GUI.Button(new Rect(10, 50, 120, 28), "Recall cards"))
+                {
+                    float cardSpeed = 0.35f;
+                    for (int i = 0; i < cardsInPlay; i++)
+                    {
+                        cardModel[i].StartRecall(cardSpeed);
+                    }
+                    cardsInPlay = 0;
+                }
+
+                if (GUI.Button(new Rect(10, 90, 180, 28), "Simulate fold for Player 7"))
+                {
+                    //Player 6 will have cardModels[6] and cardModels[14]
+                    //this could be derrived from a game state check instead of hard coded
+                    cardModel[6].PlayerFold();
+                    cardModel[14].PlayerFold();
+                }
+
+                //we want to provide the option for players to show their hands at the end of the round.
+                //we need to add a button for this for the next iteration, but this simulates what it does.
+                if (GUI.Button(new Rect(10, 130, 210, 28), "Simulate show for Players 1, 4, 7"))
+                {
+                    for (int i = 0; i < 8; i+=3)
+                    {
+                        float cardSpeed = 0.35f;
+                        //Flip player's card for them to see
+                        int playerSeatPlaceholder = i;
+                        //Simulate deal from shuffle deck from server
+                        int cardIndex0 = UnityEngine.Random.Range(0, 51);
+                        int cardIndex1 = cardIndex0;
+                        //check for no duplicates
+                        while (cardIndex1 == cardIndex0)
+                        {
+                            cardIndex1 = UnityEngine.Random.Range(0, 51);
+                        }
+                        //we want to show right away, so set this to 0 for no delay
+                        int numGamePlayers = 0;
+                        //flip the cards
+                        cardModel[playerSeatPlaceholder].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder].cardBackOrig,
+                            cardModel[playerSeatPlaceholder].cardFaces[cardIndex0], playerSeatPlaceholder, numGamePlayers, cardSpeed);
+
+                        cardModel[playerSeatPlaceholder + 8].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + 8].cardBackOrig,
+                            cardModel[playerSeatPlaceholder + 8].cardFaces[cardIndex1], playerSeatPlaceholder + 8, numGamePlayers, cardSpeed);
+                    }
+                }
+
+                if (GUI.Button(new Rect(10, 170, 180, 28), "Simulate river dealing"))
+                {
+                    //simulate for numGamePlayers = 8
+                    int numGamePlayers = 8;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        float cardSpeed = 0.35f;
+                        cardModel[2*numGamePlayers+i].StartRiverDeal(i, cardSpeed);
+                        cardsInPlay++;
+                        //use cards dealt from server, commented becuase we can't proceed past matchmaking
+                        // uncomment to activte. Tested manually and it works.
+                        //int cardIndex = commonCards[i];
+                        // for now we will simulate a card from there server with:
+                        int cardIndex = UnityEngine.Random.Range(0, 51);
+                        //we want to show right away, so set this to 0 for no delay
+                        cardModel[2*numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2*numGamePlayers + i].cardBackOrig,
+                            cardModel[2*numGamePlayers + i].cardFaces[cardIndex], (2*numGamePlayers + i), 0, cardSpeed);
+                    }
+                }
+
+                if (GUI.Button(new Rect(200, 10, 200, 28), "Simulate river dealing + 1st card"))
+                {
+                    //simulate for numGamePlayers = 8
+                    int numGamePlayers = 8;
+                    for (int i = 3; i < 4; i++)
+                    {
+                        float cardSpeed = 0.35f;
+                        cardModel[2 * numGamePlayers + i].StartRiverDeal(i, cardSpeed);
+                        cardsInPlay++;
+                        //use cards dealt from server, commented for reasons outlined above
+                        //int cardIndex = commonCards[i];
+                        //simulate server dealt card:
+                        int cardIndex = UnityEngine.Random.Range(0, 51);
+                        //we want to show right away, so set this to 0 for no delay
+                        cardModel[2 * numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2 * numGamePlayers + i].cardBackOrig,
+                            cardModel[2 * numGamePlayers + i].cardFaces[cardIndex], (2 * numGamePlayers + i), 0, cardSpeed);
+                    }
+                }
+
+                if (GUI.Button(new Rect(410, 10, 200, 28), "Simulate river dealing + 2nd card"))
+                {
+                    //simulate for numGamePlayers = 8
+                    int numGamePlayers = 8;
+                    for (int i = 4; i < 5; i++)
+                    {
+                        float cardSpeed = 0.35f;
+                        cardModel[2 * numGamePlayers + i].StartRiverDeal(i, cardSpeed);
+                        cardsInPlay++;
+                        //use cards dealt from server
+                        //int cardIndex = commonCards[i];
+                        //simulate server dealt card:
+                        int cardIndex = UnityEngine.Random.Range(0, 51);
+                        //we want to show right away, so set this to 0 for no delay
+                        cardModel[2 * numGamePlayers + i].GetComponent<CardFlipper>().FlipCard(cardModel[2 * numGamePlayers + i].cardBackOrig,
+                            cardModel[2 * numGamePlayers + i].cardFaces[cardIndex], (2 * numGamePlayers + i), 0, cardSpeed);
+                    }
+                }
+            }*/
+
+            //this converts the server given data 'rank' and 'type' to a card face index from 0-51
+            private int convertToInt(string rank, string type)
     {
         //ace
         if (rank == "A")

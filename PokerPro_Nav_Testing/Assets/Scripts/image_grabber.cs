@@ -22,14 +22,16 @@ public class image_grabber : MonoBehaviour {
 
         // load in the player avatar and rank images
         StartCoroutine(set_player_info());
-        load_avatar();
-        load_rank();
+        //load_avatar();
+        //load_rank();
 	}
 
     private void Update()
     {
         if(isDone)
         {
+            load_avatar();
+            load_rank();
             Debug.Log("Updating the main menu with player data.");
             update_images();
             isDone = false;
