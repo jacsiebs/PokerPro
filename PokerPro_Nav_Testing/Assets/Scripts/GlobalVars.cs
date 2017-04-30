@@ -36,6 +36,10 @@ public class GlobalVars : MonoBehaviour {
 	public static int bet = 0;// curent bot
     public static int curr_bet = 0;// current bet on the table
 
+    // for use with the client side AFK check timer
+    public static bool isTurn = false;
+    public static int AFK = 0;
+
 	//bug when this value is large (like 2m instead of 1m), slider will jump by more than 10k at a time. Can hopefully fix with scaling related to chipstack size.
 	//bug isn't functionally hurtful but needs fixing before release
 	public static int init_chips = 1000000;// starting number of chips per player

@@ -42,8 +42,10 @@ public class DebugChangeCard : MonoBehaviour
         public static bool recallVar;
         // www finished 
         public static bool wwwLoaded;
-
+        // deal cards?
         public static bool dealVar = false;
+        // cards finsihed dealing animation for help flashing on inital game state
+        public static bool dealtCards = false;
         // true only for first game state
         public static bool init = true;
         public static bool leaveReady = false;
@@ -78,6 +80,14 @@ public class DebugChangeCard : MonoBehaviour
         }
         parseGameState();
         checkingForCCards();
+        if (0 < GlobalVars.AFK && GlobalVars.AFK <= 2)
+        {
+            fold(); // this acts like a check/fold
+        }
+        if (GlobalVars.AFK == 3)
+        {
+            leaveGame(); // kick player who mises more than 2 turns
+        }
     }
 
     void Awake()
@@ -139,6 +149,15 @@ public class DebugChangeCard : MonoBehaviour
         UnityEngine.SceneManagement.SceneManager.LoadScene("Main_Menu_Scene");
     }
 
+    // check of cards have finished ealing, flash whose turn it is when done
+    private void checkDoneDealing()
+    {
+        if (gameGlobals.dealtCards)
+        {
+
+        }
+    }
+
     // updates the server with the new stats
     private void sendStats(bool leavingGame)
     {
@@ -187,13 +206,15 @@ public class DebugChangeCard : MonoBehaviour
             if (gameGlobals.init)
             {
                 // only deal on init state
-                gameGlobals.dealVar = true; // we flahs cards if turn here
+                gameGlobals.dealVar = true; // we flash cards if turn here
                 gameGlobals.init = false;
                 Debug.Log(jsonString); //REMOVE latger
                 updateGameState();
                 if (isTurn())
                 {
                     Debug.Log("It's my turn");
+                    cardModel[gameGlobals.me].notifyTurn(myCards[0]);
+                    cardModel[gameGlobals.me + gameGlobals.numGamePlayers].notifyTurn(myCards[1]);
                     //enable bet buttons
                     Disable_Buttons.enableButtons();
                     turnOnSlider();
@@ -204,8 +225,11 @@ public class DebugChangeCard : MonoBehaviour
                 {
                     Debug.Log("Not my turn");
                     // flash opponents cards to indicate their turn
-                    cardModel[(int)gameState["currentPlayer"]].notifyOpponentTurn();
-                    cardModel[(int)gameState["currentPlayer"] + gameGlobals.numGamePlayers].notifyOpponentTurn();
+                    if (gameGlobals.dealtCards)
+                    {
+                        cardModel[(int)gameState["currentPlayer"]].notifyOpponentTurn();
+                        cardModel[(int)gameState["currentPlayer"] + gameGlobals.numGamePlayers].notifyOpponentTurn();
+                    }
                     //make sure bottons are bisabled, do nothing
                     Disable_Buttons.disableButtons();
                     turnOffSlider();
@@ -233,10 +257,13 @@ public class DebugChangeCard : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("Not my turn\n" + jsonString);
+                    Debug.Log("Not my turn\n" + jsonString + "\n" + gameGlobals.dealtCards);
                     // flash opponents cards to indicate their turn
-                    cardModel[Int32.Parse(gameState["currentPlayer"].ToString())].notifyOpponentTurn();
-                    cardModel[Int32.Parse(gameState["currentPlayer"].ToString()) + gameGlobals.numGamePlayers].notifyOpponentTurn();
+                    if (gameGlobals.dealtCards)
+                    {
+                        cardModel[(int)gameState["currentPlayer"]].notifyOpponentTurn();
+                        cardModel[(int)gameState["currentPlayer"] + gameGlobals.numGamePlayers].notifyOpponentTurn();
+                    }
                     //make sure bottons are bisabled, do nothing
                     Disable_Buttons.disableButtons();
                     turnOffSlider();
@@ -378,11 +405,13 @@ public class DebugChangeCard : MonoBehaviour
         string currentPlayer = (string) gameState["currentPlayer"];
         if (currentPlayer.Equals(GlobalVars.player_id))
         {
+            GlobalVars.isTurn = true;
             return true;
         }
         else
         {
             //Debug.Log("NOT MY TURN - from isTurn()");
+            GlobalVars.isTurn = false;
             return false;
         }
     }
@@ -499,8 +528,6 @@ public class DebugChangeCard : MonoBehaviour
 
         cardModel[playerSeatPlaceholder + numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + numGamePlayers].cardBackOrig,
             cardModel[playerSeatPlaceholder + numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder + numGamePlayers, numGamePlayers, cardSpeed);
-
-        //notify player if its their turn when they are dealt cards
     }
 
     private void dealRiverF3()
