@@ -6,14 +6,14 @@ public class DealerButtonAssign : MonoBehaviour {
     SpriteRenderer spriteRenderer;
 
     //Locations for each player spot at the table
-    private Vector3 pos0 = new Vector3(2.52f, 2.8f, 0);
-    private Vector3 pos1 = new Vector3(3.32f, 0.64f, 0);
-    private Vector3 pos2 = new Vector3(2.49f, -0.95f, 0);
-    private Vector3 pos3 = new Vector3(-2.44f, -0.93f, 0);
-    private Vector3 pos4 = new Vector3(-5.42f, -0.93f, 0);
-    private Vector3 pos5 = new Vector3(-5.3f, 0.56f, 0);
-    private Vector3 pos6 = new Vector3(-4.94f, 2.86f, 0);
-    private Vector3 pos7 = new Vector3(-0.39f, 2.93f, 0);
+    private Vector3 pos0 = new Vector3(3.96f, 4.04f, 0);
+    private Vector3 pos1 = new Vector3(4.42f, 1.85f, 0);
+    private Vector3 pos2 = new Vector3(3.96f, -0.56f, 0);
+    private Vector3 pos3 = new Vector3(-2.44f, -1.55f, 0);
+    private Vector3 pos4 = new Vector3(-5.5f, -0.54f, 0);
+    private Vector3 pos5 = new Vector3(-5.89f, 1.85f, 0);
+    private Vector3 pos6 = new Vector3(-5.48f, 4.03f, 0);
+    private Vector3 pos7 = new Vector3(-0.42f, 4.14f, 0);
 
     //Save the original location & card back for use in card recall
     private Vector3 home;
@@ -34,7 +34,6 @@ public class DealerButtonAssign : MonoBehaviour {
     {
         //If on second round of cads, place to the side of already dealt card
         Vector3 dest = getPos(playerNum);
-        dest.x = dest.x + 1f;
         StartCoroutine(LerpRoutine(dest, 0.35f));
     }
 

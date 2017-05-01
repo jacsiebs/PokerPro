@@ -787,7 +787,7 @@ public class DebugChangeCard : MonoBehaviour
             int playerSeatPlaceholder = 1;
             //the following two lines are for when the matchmaking succeeds and the game state is pulled:
             int cardIndex0 = 2;//myCards[0];
-            int cardIndex1 = 15;//myCards[1];
+            int cardIndex1 = 19;//myCards[1];
                                 // if we want to see what the cards are, we can uncomment the following two lines:
                                 //print(cardIndex0);
                                 //print(cardIndex1);
@@ -804,10 +804,10 @@ public class DebugChangeCard : MonoBehaviour
 
         // this test recalls all the cards currently in play
         // you can think of this as a psudo-shuffle animation
-        if (GUI.Button(new Rect(10, 50, 120, 28), "Test Opponent Player 3"))
+        if (GUI.Button(new Rect(10, 50, 120, 28), "Flash P3"))
         {
             cardModel[2].notifyOpponentTurn();
-            cardModel[7].notifyOpponentTurn();
+            cardModel[10].notifyOpponentTurn();
         }
     }
             /*private void OnGUI()
