@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class Avatar_Selector : MonoBehaviour {
 
+    public const int numAvatars = 9;
+
     // Use this for initialization
     void Awake () {
         // get the pre-made sprites and load them into the images
@@ -18,9 +20,10 @@ public class Avatar_Selector : MonoBehaviour {
     {
         // TODO update for more sprties
         // add each avatar to a button on the selector display
-        for (int i = 1; i < 2; i++)
+        for (int i = 1; i <= numAvatars; i++)
         {
             GameObject button = GameObject.Find("avatar_" + i);
+            
             button.GetComponent<Image>().sprite = Avatar_Cropper.get_avatar_no_crop(i);
         }
     }
@@ -37,8 +40,10 @@ public class Avatar_Selector : MonoBehaviour {
     {
         // send the update request
         string url = "http://104.131.99.193/changeStat/" + GlobalVars.player_id + "/avatarId/" + avatar_num;
+        Debug.Log("Requesting url: " + url);
         WWW www = new WWW(url);
         yield return www;
+        Debug.Log("Updated the avatar number to " + avatar_num);
         GlobalVars.avatar_num = avatar_num;
 
         GlobalVars.avatar = Avatar_Cropper.get_avatar(avatar_num);

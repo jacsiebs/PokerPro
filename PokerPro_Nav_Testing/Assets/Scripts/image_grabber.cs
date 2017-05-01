@@ -13,7 +13,7 @@ public class image_grabber : MonoBehaviour {
     private static bool isDone = false;
 
 	// Use this for initialization
-	void Awake () {
+	void Start () {
 //        get_player_id(GlobalVars.fb_id);
         // wait until the server responds to continue (player_id must be set)
 //        WaitForSeconds w;
@@ -50,14 +50,17 @@ public class image_grabber : MonoBehaviour {
  
         Debug.Log("Got a player object.");
         string jsonString = www.text;
+        Debug.Log(jsonString);
         var playerJson = JsonMapper.ToObject(jsonString);// parse
         GlobalVars.ELO = (int) playerJson["elo"];
         GlobalVars.avatar_num = (int) playerJson["avatarId"];
         GlobalVars.username = playerJson["name"].ToString();
         Debug.Log(GlobalVars.username + " has been logged in.");
-        //GlobalVars.rank = Ranker.getRank(GlobalVars.ELO);// Not completed with elo calculations yet
-        //GlobalVars.rank_sprite = Ranker.getSprite(GlobalVars.rank);// incomplete
 
+        // elo and ranking system is currently not imlpemented - use placeholder
+        //GlobalVars.rank = Ranker.getRank(GlobalVars.ELO);// Not completed with elo calculations yet
+//        Texture2D rank_texture = Resources.Load<Texture2D>("rank_placeholder");// placeholder
+//        GlobalVars.rank_sprite = Sprite.Create(rank_texture, new Rect(0, 0, rank_texture.height-1, rank_texture.width-1), new Vector2(0, 0));
         GlobalVars.square_avatar = Avatar_Cropper.get_avatar_no_crop(GlobalVars.avatar_num);
         GlobalVars.avatar = Avatar_Cropper.get_avatar(GlobalVars.avatar_num);
         isDone = true;      
