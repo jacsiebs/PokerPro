@@ -156,13 +156,7 @@ public class DebugChangeCard : MonoBehaviour
         int[] av_nums = new int[gameGlobals.numGamePlayers];
         for(int i = 0; i < gameGlobals.numGamePlayers; ++i)
         {
-            av_nums[i] = (int) gameState["players"][i]["avatarId"];
-            // TODO this is where the code to load the facebook profile should be - unimplemented for players other than the user
-            //      if a player has an facebook pic avatar -> set it to the default avatar
-            if(av_nums[i] == 0)
-            {
-                av_nums[i] = 1;// default avatar
-            }
+            av_nums[i] = 1;//gameState["players"][i]["av_num"];//TODO
         }
         return av_nums;
     }
@@ -297,8 +291,8 @@ public class DebugChangeCard : MonoBehaviour
                     // flash opponents cards to indicate their turn
                     if (gameGlobals.dealtCards)
                     {
-                        cardModel[getOpponentPos()].notifyOpponentTurn();
-                        cardModel[getOpponentPos() + gameGlobals.numGamePlayers].notifyOpponentTurn();
+                        cardModel[(int)gameState["currentPlayer"]].notifyOpponentTurn();
+                        cardModel[(int)gameState["currentPlayer"] + gameGlobals.numGamePlayers].notifyOpponentTurn();
                     }
                     //make sure bottons are bisabled, do nothing
                     Disable_Buttons.disableButtons();

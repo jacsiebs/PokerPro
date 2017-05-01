@@ -59,8 +59,8 @@ public class image_grabber : MonoBehaviour {
 
         // elo and ranking system is currently not imlpemented - use placeholder
         //GlobalVars.rank = Ranker.getRank(GlobalVars.ELO);// Not completed with elo calculations yet
-        Texture2D rank_texture = Resources.Load<Texture2D>("rank_placeholder");// placeholder
-        GlobalVars.rank_sprite = Sprite.Create(rank_texture, new Rect(0, 0, rank_texture.height, rank_texture.width), new Vector2(0, 0));
+//        Texture2D rank_texture = Resources.Load<Texture2D>("rank_placeholder");// placeholder
+//        GlobalVars.rank_sprite = Sprite.Create(rank_texture, new Rect(0, 0, rank_texture.height-1, rank_texture.width-1), new Vector2(0, 0));
         GlobalVars.square_avatar = Avatar_Cropper.get_avatar_no_crop(GlobalVars.avatar_num);
         GlobalVars.avatar = Avatar_Cropper.get_avatar(GlobalVars.avatar_num);
         isDone = true;      
