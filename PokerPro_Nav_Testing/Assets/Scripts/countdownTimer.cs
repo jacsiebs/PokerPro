@@ -16,6 +16,7 @@ public class countdownTimer : MonoBehaviour
 
     private static GameObject text;
     private static Text time;
+    private static bool toggle = false;
 
     private void Awake()
     {
@@ -31,9 +32,16 @@ public class countdownTimer : MonoBehaviour
 
     void Update()
     {
+        // reset the timer
+        if (toggle)
+        {
+            timeLeft = 30;
+        }
+
         timeLeft -= (Time.deltaTime * 0.10f);
         if (GlobalVars.isTurn)
         {
+            toggle = false;
             // start counting down
             if (Mathf.Round(timeLeft) == 30)
             {
@@ -62,6 +70,7 @@ public class countdownTimer : MonoBehaviour
         }
         else
         {
+            toggle = true;
             time.text = "";
         }
     }

@@ -291,8 +291,8 @@ public class DebugChangeCard : MonoBehaviour
                     // flash opponents cards to indicate their turn
                     if (gameGlobals.dealtCards)
                     {
-                        cardModel[(int)gameState["currentPlayer"]].notifyOpponentTurn();
-                        cardModel[(int)gameState["currentPlayer"] + gameGlobals.numGamePlayers].notifyOpponentTurn();
+                        cardModel[getOpponentPos()].notifyOpponentTurn();
+                        cardModel[getOpponentPos() + gameGlobals.numGamePlayers].notifyOpponentTurn();
                     }
                     //make sure bottons are bisabled, do nothing
                     Disable_Buttons.disableButtons();
