@@ -9,7 +9,7 @@ public class GlobalVars : MonoBehaviour {
     private void Awake()
     {
         DontDestroyOnLoad(this);// maintain globals vars
-        player_id = "7865342";// Random.Range(0, 9999999).ToString();// TODO placeholder to get a random player id
+        player_id = "234524";// Random.Range(0, 9999999).ToString();// TODO placeholder to get a random player id
     }
 
     // player avatar
@@ -20,6 +20,10 @@ public class GlobalVars : MonoBehaviour {
     public static Sprite rank_sprite = null;
     public static int ELO;
     public static string rank;
+
+    // for use with the client side AFK check timer
+    public static bool isTurn = false;
+    public static int AFK = 0;
 
     // matchmaking vars
     public static string fb_id;
