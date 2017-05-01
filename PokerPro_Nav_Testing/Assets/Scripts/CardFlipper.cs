@@ -57,6 +57,11 @@ public class CardFlipper : MonoBehaviour {
         {
             model.toggleFace(false);
         }
-        DebugChangeCard.gameGlobals.dealtCards = true;
+
+        /*else
+        {
+            model.cardIndex = cardIndex;
+            model.toggleFace(true);
+        }*/
     }
 }

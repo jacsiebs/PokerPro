@@ -28,6 +28,8 @@ public class DebugChangeCard : MonoBehaviour
         public static int me;
         // this value is for the total number of players in a game
         public static int numGamePlayers;
+        public static bool[] isActive;// is the ith player active?
+        public static int[] av_nums;// the ith players avatar number
         // this indicates if the game state has been loaded yet
         public static bool isLoaded;
         public static int numCCards;
@@ -42,10 +44,8 @@ public class DebugChangeCard : MonoBehaviour
         public static bool recallVar;
         // www finished 
         public static bool wwwLoaded;
-        // deal cards?
+
         public static bool dealVar = false;
-        // cards finsihed dealing animation for help flashing on inital game state
-        public static bool dealtCards = false;
         // true only for first game state
         public static bool init = true;
         public static bool leaveReady = false;
@@ -80,14 +80,6 @@ public class DebugChangeCard : MonoBehaviour
         }
         parseGameState();
         checkingForCCards();
-        if (0 < GlobalVars.AFK && GlobalVars.AFK <= 2)
-        {
-            fold(); // this acts like a check/fold
-        }
-        if (GlobalVars.AFK == 3)
-        {
-            leaveGame(); // kick player who mises more than 2 turns
-        }
     }
 
     void Awake()
@@ -96,6 +88,8 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.isLoaded = false;
         List<GameObject> cards = new List<GameObject>();
         gameGlobals.handNum = "1";
+
+        Debug.Log("Awaken: DebugChangeCards");
 
         //find all the card objects in the scene and add them to a list to reference later
         for (int k = 25; k > -1; k--)
@@ -129,6 +123,34 @@ public class DebugChangeCard : MonoBehaviour
         // end add
     }
 
+    public bool[] get_active_players()
+    {
+        int i;
+        gameGlobals.numGamePlayers = gameState["players"].Count;
+        bool[] isActive = new bool[gameGlobals.numGamePlayers];
+        // will be updated if players drop out
+        for(i = 0;i < gameGlobals.numGamePlayers; ++i)
+        {
+            isActive[i] = true;
+        }
+        // disable all other player panels
+        for(; i < 8; ++i)
+        {
+            GameObject.Find("Player_Panel_" + i).SetActive(false);
+        }
+        return isActive;
+    }
+
+    public int[] get_player_avatar_nums()
+    {
+        int[] av_nums = new int[gameGlobals.numGamePlayers];
+        for(int i = 0; i < gameGlobals.numGamePlayers; ++i)
+        {
+            av_nums[i] = 1;//gameState["players"][i]["av_num"];//TODO
+        }
+        return av_nums;
+    }
+
     // use for on-click
     public void leaveGame()
     {
@@ -147,15 +169,6 @@ public class DebugChangeCard : MonoBehaviour
         // return to main menu
         Debug.Log("Game succesfully left. Returning to the main menu.");
         UnityEngine.SceneManagement.SceneManager.LoadScene("Main_Menu_Scene");
-    }
-
-    // check of cards have finished ealing, flash whose turn it is when done
-    private void checkDoneDealing()
-    {
-        if (gameGlobals.dealtCards)
-        {
-
-        }
     }
 
     // updates the server with the new stats
@@ -201,20 +214,23 @@ public class DebugChangeCard : MonoBehaviour
     {
         if (gameGlobals.wwwLoaded)
         {
-            Display_Curr_Bet.update_player_names(jsonString);
-            Display_Curr_Bet.update_player_chips(jsonString);
             if (gameGlobals.init)
             {
                 // only deal on init state
-                gameGlobals.dealVar = true; // we flash cards if turn here
-                gameGlobals.init = false;
+                gameGlobals.dealVar = true; // we flahs cards if turn here
                 Debug.Log(jsonString); //REMOVE latger
                 updateGameState();
+                // remove player panels for players not in the game
+                Avatar_Cropper.set_all_avatars(get_player_avatar_nums(), get_active_players());
+                // set player names
+                Debug.Log(jsonString);
+                Display_Curr_Bet.update_player_names(jsonString);
+
+                gameGlobals.init = false;
+
                 if (isTurn())
                 {
                     Debug.Log("It's my turn");
-                    cardModel[gameGlobals.me].notifyTurn(myCards[0]);
-                    cardModel[gameGlobals.me + gameGlobals.numGamePlayers].notifyTurn(myCards[1]);
                     //enable bet buttons
                     Disable_Buttons.enableButtons();
                     turnOnSlider();
@@ -225,11 +241,8 @@ public class DebugChangeCard : MonoBehaviour
                 {
                     Debug.Log("Not my turn");
                     // flash opponents cards to indicate their turn
-                    if (gameGlobals.dealtCards)
-                    {
-                        cardModel[(int)gameState["currentPlayer"]].notifyOpponentTurn();
-                        cardModel[(int)gameState["currentPlayer"] + gameGlobals.numGamePlayers].notifyOpponentTurn();
-                    }
+                    cardModel[(int)gameState["currentPlayer"]].notifyOpponentTurn();
+                    cardModel[(int)gameState["currentPlayer"] + gameGlobals.numGamePlayers].notifyOpponentTurn();
                     //make sure bottons are bisabled, do nothing
                     Disable_Buttons.disableButtons();
                     turnOffSlider();
@@ -244,6 +257,8 @@ public class DebugChangeCard : MonoBehaviour
             {
                 Debug.Log(jsonString); //REMOVE latger
                 updateGameState();
+                // update chip counts on display
+                Display_Curr_Bet.update_player_chips(jsonString);
                 if (isTurn())
                 {
                     Debug.Log("It's my turn");
@@ -257,13 +272,10 @@ public class DebugChangeCard : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("Not my turn\n" + jsonString + "\n" + gameGlobals.dealtCards);
+                    Debug.Log("Not my turn\n" + jsonString);
                     // flash opponents cards to indicate their turn
-                    if (gameGlobals.dealtCards)
-                    {
-                        cardModel[(int)gameState["currentPlayer"]].notifyOpponentTurn();
-                        cardModel[(int)gameState["currentPlayer"] + gameGlobals.numGamePlayers].notifyOpponentTurn();
-                    }
+                    cardModel[Int32.Parse(gameState["currentPlayer"].ToString())].notifyOpponentTurn();
+                    cardModel[Int32.Parse(gameState["currentPlayer"].ToString()) + gameGlobals.numGamePlayers].notifyOpponentTurn();
                     //make sure bottons are bisabled, do nothing
                     Disable_Buttons.disableButtons();
                     turnOffSlider();
@@ -405,13 +417,11 @@ public class DebugChangeCard : MonoBehaviour
         string currentPlayer = (string) gameState["currentPlayer"];
         if (currentPlayer.Equals(GlobalVars.player_id))
         {
-            GlobalVars.isTurn = true;
             return true;
         }
         else
         {
             //Debug.Log("NOT MY TURN - from isTurn()");
-            GlobalVars.isTurn = false;
             return false;
         }
     }
@@ -528,6 +538,8 @@ public class DebugChangeCard : MonoBehaviour
 
         cardModel[playerSeatPlaceholder + numGamePlayers].GetComponent<CardFlipper>().FlipCard(cardModel[playerSeatPlaceholder + numGamePlayers].cardBackOrig,
             cardModel[playerSeatPlaceholder + numGamePlayers].cardFaces[cardIndex1], playerSeatPlaceholder + numGamePlayers, numGamePlayers, cardSpeed);
+
+        //notify player if its their turn when they are dealt cards
     }
 
     private void dealRiverF3()

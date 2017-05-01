@@ -6,6 +6,12 @@ using UnityEngine.UI;
 public class Avatar_Cropper
 {
 
+    public void Awake()
+    {
+        Debug.Log("Awaken: Avatar_Cropper");
+    }
+
+
     // get the player's avatar as a cropped circular sprite specified by the avatar number
     public static Sprite get_avatar(int av_num)
     {

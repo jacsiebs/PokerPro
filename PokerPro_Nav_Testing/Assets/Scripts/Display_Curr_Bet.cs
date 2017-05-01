@@ -126,32 +126,41 @@ public class Display_Curr_Bet : MonoBehaviour
         // get the player chip count and apply it to the correct text display
         for (int i = 0; i < DebugChangeCard.gameGlobals.numGamePlayers; ++i)
         {
-            string chips = gamestate["players"][i]["chips"].ToString();
+            string ch;
+            int chips = (int) gamestate["players"][i]["chips"];
+            // reduce the size of the text by using 'k'
+            if(chips > 1000)
+            {
+                ch = (chips / 1000).ToString() + 'k';
+            } else
+            {
+                ch = chips.ToString();
+            }
             switch (i)
             {
                 case 0:
-                    chips_0.text = chips;
+                    chips_0.text = ch;
                     break;
                 case 1:
-                    chips_1.text = chips;
+                    chips_1.text = ch;
                     break;
                 case 2:
-                    chips_2.text = chips;
+                    chips_2.text = ch;
                     break;
                 case 3:
-                    chips_3.text = chips;
+                    chips_3.text = ch;
                     break;
                 case 4:
-                    chips_4.text = chips;
+                    chips_4.text = ch;
                     break;
                 case 5:
-                    chips_5.text = chips;
+                    chips_5.text = ch;
                     break;
                 case 6:
-                    chips_6.text = chips;
+                    chips_6.text = ch;
                     break;
                 case 7:
-                    chips_7.text = chips;
+                    chips_7.text = ch;
                     break;
             }
         }

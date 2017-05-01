@@ -12,61 +12,58 @@ public class countdownTimer : MonoBehaviour
     // we use 5 seconds here for testing purposes, so we change our time equation to (i*5)-4 
     // we use -4 to add 1 second of buffer time for everything to catch up
 
-    float timeLeft = 5;
-
-    private static GameObject text;
-    private static Text time;
-    private Button BBP1;
-    private Button BBM1;
-    private Button PlaceBet;
-    private Slider BetSlider;
-
-    private void Awake()
-    {
-        Debug.Log("TIMER WAKE");
-        text = GameObject.Find("Timer");
-        time = text.GetComponent<Text>();
-    }
+    float timeLeft = -1;
 
     private void Start()
     {
-        
+        getNum();
     }
+    
+
+    public Text text;
+    public Button BBP1;
+    public Button BBM1;
+    public Button PlaceBet;
+    public Slider BetSlider;
 
     void Update()
     {
-        if (GlobalVars.isTurn || true)
+        timeLeft -= Time.deltaTime;
+        if (timeLeft == 5)
         {
-            Debug.Log("TIMER UPDATE");
-            // start counting down
-            if (Mathf.Round(timeLeft) == 5)
-            {
-                //BBP1.IsActive().Equals(true);
-                //BBM1.IsActive().Equals(true);
-                //PlaceBet.IsActive().Equals(true);
-                //BetSlider.IsActive().Equals(true);
-            }
-            if (0 < Mathf.Round(timeLeft) && Mathf.Round(timeLeft) <= 5)
-            {
-                time.text = ("Time Left:" + Mathf.Round(timeLeft));
-            }
-            if (Mathf.Round(timeLeft) == 0)
-            {
-                time.text = "Time Left:" + Mathf.Round(timeLeft);
-                //BBP1.IsActive().Equals(false);
-                //BBM1.IsActive().Equals(false);
-                //PlaceBet.IsActive().Equals(false);
-                //BetSlider.IsActive().Equals(false);
-                timeLeft = 5; // reset timer
-                GlobalVars.isTurn = false;
-                GlobalVars.AFK++;
-            }
-            timeLeft -= Time.deltaTime;
-            Debug.Log(timeLeft);
+            BBP1.IsActive().Equals(true);
+            BBM1.IsActive().Equals(true);
+            PlaceBet.IsActive().Equals(true);
+            BetSlider.IsActive().Equals(true);
         }
-        else
+        if (0 < timeLeft && timeLeft < 5)
         {
-            time.text = "";
+            text.text = "Time Left:" + Mathf.Round(timeLeft);
         }
+        if (timeLeft == 0)
+        {
+            text.text = "Time Left:" + Mathf.Round(timeLeft);
+            BBP1.IsActive().Equals(false);
+            BBM1.IsActive().Equals(false);
+            PlaceBet.IsActive().Equals(false);
+            BetSlider.IsActive().Equals(false);
+            int resetTime = (5 * (DebugChangeCard.gameGlobals.numGamePlayers)) - 4;
+            timeLeft = (float)resetTime;
+        }
+    }
+
+    private IEnumerable getNum()
+    {
+        yield return 0;
+        while (!DebugChangeCard.gameGlobals.isLoaded)
+        {
+            //wait to load  
+            text.text = "Loading...";
+        }
+        int meVal = DebugChangeCard.gameGlobals.me;
+        meVal = 5 * (meVal + 1) - 4;
+        timeLeft = (float)meVal;
+        print("MEVAL:" + meVal);
+        text.text = "Time Left:" + timeLeft;
     }
 }
