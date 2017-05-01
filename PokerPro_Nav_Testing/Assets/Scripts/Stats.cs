@@ -33,8 +33,9 @@ public class Stats : MonoBehaviour {
     private void load_rank()
     {
         Image rank_image = GameObject.Find("Rank_Image").GetComponent<Image>();
-        Text rank_text = GameObject.Find("Rank_Image").GetComponent<Text>();
-//        rank_image.sprite = GlobalVars.rank_sprite;
+        // main menu must have already set the globalvars.rank sprite
+        rank_image.sprite = GlobalVars.rank_sprite;
+        // rank text unimplemented
 //        rank_text.text = GlobalVars.rank;
     }
 

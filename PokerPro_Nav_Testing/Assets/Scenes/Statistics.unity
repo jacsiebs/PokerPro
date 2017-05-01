@@ -158,7 +158,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Cash Rank
+  m_Text: Silver I
 --- !u!222 &80409779
 CanvasRenderer:
   m_ObjectHideFlags: 0

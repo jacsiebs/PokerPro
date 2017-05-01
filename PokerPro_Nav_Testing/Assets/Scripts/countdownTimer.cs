@@ -58,7 +58,7 @@ public class countdownTimer : MonoBehaviour
                 GlobalVars.AFK++;
             }
             timeLeft -= Time.deltaTime;
-            Debug.Log(timeLeft);
+            //Debug.Log(timeLeft);
         }
         else
         {
