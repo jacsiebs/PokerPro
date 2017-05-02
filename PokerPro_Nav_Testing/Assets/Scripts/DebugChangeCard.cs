@@ -21,6 +21,8 @@ public class DebugChangeCard : MonoBehaviour
     private Slider theSlider;
     // dealter button
     private DealerButtonAssign dealerButton;
+    // chips counts of all players
+    public static int[] playerChipCounts;
 
     public static class gameGlobals
     {
@@ -51,6 +53,8 @@ public class DebugChangeCard : MonoBehaviour
         // true only for first game state
         public static bool init = true;
         public static bool leaveReady = false;
+        public static bool AFK_Fold1 = false;
+        public static bool AFK_Fold2 = false;
     }
 
     public static class Stats {
@@ -82,11 +86,17 @@ public class DebugChangeCard : MonoBehaviour
         }
         parseGameState();
         checkingForCCards();
-        if (0 < GlobalVars.AFK && GlobalVars.AFK <= 2)
+        if (1 == GlobalVars.AFK && !gameGlobals.AFK_Fold1)
         {
             fold(); // this acts like a check/fold
+            gameGlobals.AFK_Fold1 = true;
         }
-        if (GlobalVars.AFK == 3)
+        if(GlobalVars.AFK == 2 && !gameGlobals.AFK_Fold2)
+        {
+            fold();
+            gameGlobals.AFK_Fold2 = true;
+        }
+        if (GlobalVars.AFK >= 3)
         {
             leaveGame(); // kick player who mises more than 2 turns
         }
@@ -240,7 +250,13 @@ public class DebugChangeCard : MonoBehaviour
                 Avatar_Cropper.set_all_avatars(get_player_avatar_nums(), get_active_players());
                 // set player names
                 Debug.Log(jsonString);
+                playerChipCounts = new int[gameGlobals.numGamePlayers];
+                for(int i = 0; i < gameGlobals.numGamePlayers; ++i)
+                {
+                    playerChipCounts[i] = GlobalVars.init_chips;
+                }
                 Display_Curr_Bet.update_player_names(jsonString);
+                
 
                 gameGlobals.init = false;
 
@@ -340,8 +356,10 @@ public class DebugChangeCard : MonoBehaviour
         gameGlobals.isLoaded = true;
         Debug.Log("Pot: " + gameState["pot"]);// delete this
         GlobalVars.Pot = (int)gameState["pot"];
-        Debug.Log("Whose turn is it?");
         checkNewRound(gameState["hand"].ToString());
+
+        // update the current bet on the table
+        GlobalVars.curr_bet = (int) gameState["callAmount"];
         // move dealer button to correct place
         dealerButton.StartFly(Int32.Parse(gameState["db"].ToString()));
     }
@@ -733,6 +751,7 @@ public class DebugChangeCard : MonoBehaviour
                 Debug.Log("Sent bet and got a gamestate.");
                 jsonString = www.text;
                 Debug.Log(jsonString); // REMOVE later
+                Display_Curr_Bet.update_player_chips(jsonString);
                 updateGameState();
                 // reset the bet needed to call
                 GlobalVars.curr_bet = 0;
@@ -769,7 +788,7 @@ public class DebugChangeCard : MonoBehaviour
     //----------------------------------------------------------------------------
     // *****UNCOMMENT BELOW TO ENABLE TESTING BUTTONS IF YOU WANT TO USE THEM*****
     //----------------------------------------------------------------------------
-    private void OnGUI()
+    /*private void OnGUI()
     {
         if (GUI.Button(new Rect(10, 10, 175, 28), "Deal from deck: 2 Players"))
         {
@@ -960,8 +979,8 @@ public class DebugChangeCard : MonoBehaviour
                 }
             }*/
 
-            //this converts the server given data 'rank' and 'type' to a card face index from 0-51
-            private int convertToInt(string rank, string type)
+    //this converts the server given data 'rank' and 'type' to a card face index from 0-51
+    private int convertToInt(string rank, string type)
     {
         //ace
         if (rank == "A")

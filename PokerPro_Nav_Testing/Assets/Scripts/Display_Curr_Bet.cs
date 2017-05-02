@@ -128,6 +128,12 @@ public class Display_Curr_Bet : MonoBehaviour
         {
             string ch;
             int chips = (int) gamestate["players"][i]["chips"];
+            if(chips > DebugChangeCard.playerChipCounts[i])
+            {
+                string name = DebugChangeCard.gameState["players"][i]["name"].ToString();
+                Display_Message.print_message(name + " won " + (chips-DebugChangeCard.playerChipCounts[i]) + " chips.");
+            }
+            DebugChangeCard.playerChipCounts[i] = chips;
             // reduce the size of the text by using 'k'
             if(chips > 1000)
             {
