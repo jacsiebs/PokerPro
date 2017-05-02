@@ -128,6 +128,12 @@ public class Display_Curr_Bet : MonoBehaviour
         {
             string ch;
             int chips = (int) gamestate["players"][i]["chips"];
+            if(chips == 0)
+            {
+                // player has lost
+                string name = DebugChangeCard.gameState["players"][i]["name"].ToString();
+                Display_Message.print_message(name + " has lost all chips!");
+            }
             if(chips > DebugChangeCard.playerChipCounts[i])
             {
                 string name = DebugChangeCard.gameState["players"][i]["name"].ToString();

@@ -756,6 +756,7 @@ public class DebugChangeCard : MonoBehaviour
                 // reset the bet needed to call
                 GlobalVars.curr_bet = 0;
                 theSlider.value = 0;// also makes GlobalVars.bet=0
+                GlobalVars.bet = 0;
 
                 if (isTurn())
                 {
